@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>리움 발표용 인프라 구조도</title>
+<style>
+  :root{
+    --ink:#0f172a;
+    --muted:#64748b;
+    --line:#94a3b8;
+    --blue:#1d4ed8;
+    --green:#059669;
+    --purple:#7c3aed;
+    --orange:#ea580c;
+    --cyan:#0891b2;
+    --slate:#334155;
+  }
+  *{box-sizing:border-box}
+  html,body{min-height:100%}
+  body{
+    margin:0;
+    background:#f8fafc;
+    color:var(--ink);
+    font-family:"Pretendard","Malgun Gothic",-apple-system,"Segoe UI",sans-serif;
+  }
+  .wrap{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .slide{
+    position:relative;
+    width:min(1500px,calc(100vw - 48px));
+    aspect-ratio:16/9;
+    min-height:760px;
+    background:#fff;
+    border:1px solid #dbe4ef;
+    border-radius:10px;
+    box-shadow:0 18px 48px rgba(15,23,42,.10);
+    overflow:hidden;
+  }
+  h1{
+    position:absolute;
+    left:42px;
+    top:28px;
+    margin:0;
+    font-size:30px;
+    line-height:1.16;
+    letter-spacing:0;
+  }
+  .sub{
+    position:absolute;
+    left:44px;
+    top:70px;
+    color:#475569;
+    font-size:14px;
+    line-height:1.35;
+  }
+  .badge-row{
+    position:absolute;
+    right:38px;
+    top:32px;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+  .badge{
+    border:1px solid #dbeafe;
+    background:#eff6ff;
+    color:#1d4ed8;
+    border-radius:7px;
+    padding:7px 10px;
+    font-size:12px;
+    font-weight:850;
+    white-space:nowrap;
+  }
+  svg.wires{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    pointer-events:none;
+    z-index:2;
+  }
+  .zone{
+    position:absolute;
+    z-index:1;
+    border-radius:14px;
+    border:2px solid;
+    background:#fff;
+  }
+  .zone-title{
+    position:absolute;
+    left:18px;
+    top:12px;
+    font-size:14px;
+    font-weight:900;
+  }
+  .box{
+    position:absolute;
+    z-index:3;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    background:#fff;
+    border:1.6px solid #cbd5e1;
+    border-radius:9px;
+    box-shadow:0 3px 9px rgba(15,23,42,.10);
+    padding:12px 14px;
+  }
+  .box h3{
+    margin:0;
+    font-size:15px;
+    line-height:1.22;
+    font-weight:900;
+  }
+  .box p{
+    margin:7px 0 0;
+    color:#475569;
+    font-size:12px;
+    line-height:1.36;
+  }
+  .small h3{font-size:13px}
+  .small p{font-size:10.8px}
+  .actor{border-color:#334155;background:#fff}
+  .edge{border-color:#059669;background:#ecfdf5}
+  .app{border-color:#2563eb;background:#eff6ff}
+  .ai{border-color:#7c3aed;background:#f5f3ff}
+  .db{border-color:#ea580c;background:#fff7ed}
+  .store{border-color:#7c3aed;background:#faf5ff}
+  .ops{border-color:#0891b2;background:#ecfeff}
+  .admin{border-color:#15803d;background:#f0fdf4}
+  .tag{
+    display:inline-block;
+    margin-left:6px;
+    padding:2px 6px;
+    border-radius:5px;
+    color:#fff;
+    background:#475569;
+    font-size:10px;
+    font-weight:900;
+    vertical-align:1px;
+  }
+  .summary{
+    position:absolute;
+    left:42px;
+    right:42px;
+    bottom:28px;
+    z-index:3;
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:10px;
+  }
+  .point{
+    border:1px solid #e2e8f0;
+    border-radius:8px;
+    background:#f8fafc;
+    padding:10px 12px;
+  }
+  .point b{
+    display:block;
+    margin-bottom:4px;
+    font-size:12.5px;
+  }
+  .point span{
+    color:#64748b;
+    font-size:11.2px;
+    line-height:1.35;
+  }
+  .legend{
+    position:absolute;
+    right:42px;
+    top:102px;
+    z-index:3;
+    display:flex;
+    gap:12px;
+    color:#475569;
+    font-size:11px;
+    font-weight:800;
+  }
+  .lg{
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .sw{
+    width:28px;
+    border-top:3px solid;
+  }
+  @media (max-width:1100px){
+    .slide{
+      width:1500px;
+      min-height:844px;
+    }
+    .wrap{
+      justify-content:flex-start;
+      overflow:auto;
+    }
+  }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <section class="slide" aria-label="리움 발표용 인프라 구조도">
+    <h1>리움(re:도움) 클라우드 인프라 구조도</h1>
+    <div class="sub">발표용 요약본 · 상세 비용표와 보안그룹 설명은 별도 상세 구조도에서 확인</div>
+    <div class="badge-row">
+      <span class="badge">3-Tier</span>
+      <span class="badge">Multi-AZ</span>
+      <span class="badge">NKS 3환경</span>
+      <span class="badge">T4 ×2 LLM</span>
+    </div>
+    <div class="legend">
+      <div class="lg"><span class="sw" style="border-color:#334155"></span>주요 요청</div>
+      <div class="lg"><span class="sw" style="border-color:#7c3aed;border-style:dashed"></span>사설 접근</div>
+      <div class="lg"><span class="sw" style="border-color:#15803d;border-style:dashed"></span>관리 접근</div>
+    </div>
+
+    <svg class="wires" viewBox="0 0 1500 844" preserveAspectRatio="none">
+      <defs>
+        <marker id="arrowK" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#334155"></path></marker>
+        <marker id="arrowB" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#2563eb"></path></marker>
+        <marker id="arrowP" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#7c3aed"></path></marker>
+        <marker id="arrowG" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#15803d"></path></marker>
+      </defs>
+
+      <g fill="none" stroke="#334155" stroke-width="2.4" marker-end="url(#arrowK)" opacity=".72">
+        <path d="M188,260 L260,260"></path>
+        <path d="M468,260 L530,260"></path>
+        <path d="M742,260 L798,260"></path>
+        <path d="M990,260 L1052,260"></path>
+        <path d="M928,410 L928,420"></path>
+        <path d="M742,452 L798,452"></path>
+        <path d="M988,452 L1048,452"></path>
+        <path d="M650,484 L650,520"></path>
+      </g>
+      <g fill="none" stroke="#2563eb" stroke-width="2.2" marker-end="url(#arrowB)" opacity=".82">
+        <path d="M928,348 L928,378"></path>
+      </g>
+      <g fill="none" stroke="#7c3aed" stroke-width="2.2" stroke-dasharray="7 6" marker-end="url(#arrowP)" opacity=".9">
+        <path d="M893,484 L893,570 L1018,570"></path>
+        <path d="M1165,570 L1262,570"></path>
+      </g>
+      <g fill="none" stroke="#15803d" stroke-width="2.2" stroke-dasharray="7 6" marker-end="url(#arrowG)" opacity=".9">
+        <path d="M188,645 L260,645"></path>
+        <path d="M440,645 L528,570"></path>
+      </g>
+      <text x="204" y="244" fill="#334155" font-size="12" font-weight="800">HTTPS</text>
+      <text x="486" y="244" fill="#334155" font-size="12" font-weight="800">정상 요청</text>
+      <text x="754" y="244" fill="#2563eb" font-size="12" font-weight="800">API 정책</text>
+      <text x="760" y="440" fill="#334155" font-size="12" font-weight="800">비동기 작업</text>
+      <text x="996" y="440" fill="#334155" font-size="12" font-weight="800">Queue</text>
+      <text x="862" y="454" fill="#334155" font-size="12" font-weight="800">읽기/쓰기</text>
+      <text x="908" y="554" fill="#7c3aed" font-size="12" font-weight="800">LLM 사설 호출</text>
+      <text x="1186" y="554" fill="#7c3aed" font-size="12" font-weight="800">문서 저장</text>
+    </svg>
+
+    <div class="box actor" style="left:48px;top:216px;width:140px;height:88px">
+      <h3>사용자</h3>
+      <p>기업 담당자<br>기관 담당자</p>
+    </div>
+
+    <div class="box admin" style="left:48px;top:600px;width:140px;height:90px">
+      <h3>관리자</h3>
+      <p>VPN / 전용선<br>운영 점검</p>
+    </div>
+
+    <div class="zone" style="left:260px;top:148px;width:970px;height:572px;border-color:#1d4ed8;background:#f8fbff">
+      <div class="zone-title" style="color:#1d4ed8">CSP VPC · Production</div>
+    </div>
+
+    <div class="zone" style="left:292px;top:192px;width:900px;height:148px;border-color:#059669;background:#ecfdf5">
+      <div class="zone-title" style="color:#059669">Public / Edge Tier</div>
+    </div>
+    <div class="box edge small" style="left:304px;top:236px;width:164px;height:72px">
+      <h3>DNS · DDoS Guard</h3>
+      <p>도메인 연결<br>대용량 공격 완화</p>
+    </div>
+    <div class="box edge small" style="left:530px;top:236px;width:212px;height:72px">
+      <h3>Managed WAF</h3>
+      <p>SQLi, XSS 등 웹 공격 차단</p>
+    </div>
+    <div class="box app small" style="left:798px;top:236px;width:192px;height:72px">
+      <h3>단일 ALB</h3>
+      <p>Multi-AZ 배치<br>정상 트래픽 분산</p>
+    </div>
+    <div class="box app small" style="left:1052px;top:236px;width:116px;height:72px">
+      <h3>API<br>Gateway</h3>
+      <p>인증·호출 제한</p>
+    </div>
+
+    <div class="zone" style="left:520px;top:370px;width:520px;height:132px;border-color:#2563eb;background:#eff6ff">
+      <div class="zone-title" style="color:#1d4ed8">App Tier · NKS Cluster</div>
+    </div>
+    <div class="box app" style="left:552px;top:420px;width:190px;height:64px">
+      <h3>API Pods</h3>
+      <p>인증, 조회, 매칭 API</p>
+    </div>
+    <div class="box app" style="left:798px;top:420px;width:190px;height:64px">
+      <h3>Worker Pods</h3>
+      <p>OCR, ETL, RAG, Batch</p>
+    </div>
+    <div class="box app" style="left:1048px;top:420px;width:150px;height:64px">
+      <h3>RabbitMQ ×3</h3>
+      <p>ack · retry · DLQ</p>
+    </div>
+
+    <div class="box db" style="left:518px;top:520px;width:264px;height:112px">
+      <h3>PostgreSQL HA<span class="tag" style="background:#ea580c">DB</span></h3>
+      <p>Primary + Standby<br>Read Replica ×1<br>PostGIS · pgvector</p>
+    </div>
+    <div class="box ai" style="left:1018px;top:520px;width:146px;height:112px">
+      <h3>Private AI</h3>
+      <p>T4 ×2 Replica<br>Qwen3-8B-AWQ<br>vLLM</p>
+    </div>
+    <div class="box store" style="left:1262px;top:520px;width:178px;height:112px">
+      <h3>Object Storage</h3>
+      <p>문서 원본<br>OCR 결과<br>감사·로그 보관</p>
+    </div>
+
+    <div class="box admin" style="left:260px;top:600px;width:180px;height:90px">
+      <h3>Bastion / Secure Access</h3>
+      <p>관리자 접속통제<br>접속 이력 관리</p>
+    </div>
+    <div class="box ops" style="left:1248px;top:246px;width:192px;height:188px">
+      <h3>운영 관제</h3>
+      <p>Monitoring<br>Log & Audit<br>Backup / Snapshot<br>Security Monitoring</p>
+    </div>
+
+    <div class="box small" style="left:292px;top:104px;width:300px;height:54px;border-color:#cbd5e1;background:#fff">
+      <h3>Dev / Validation</h3>
+      <p>Production과 별도 NKS 클러스터로 분리</p>
+    </div>
+
+    <div class="summary">
+      <div class="point"><b>진입 경로 단순화</b><span>DNS/DDoS → WAF → ALB → API Gateway → API Pods</span></div>
+      <div class="point"><b>업무 처리는 NKS</b><span>API와 Worker를 분리하고 Queue로 장시간 작업 처리</span></div>
+      <div class="point"><b>데이터 보호</b><span>DB HA, Read Replica, Object Storage 사설 접근 적용</span></div>
+      <div class="point"><b>AI 자체호스팅</b><span>T4 ×2 Replica로 외부 LLM API 전송 없이 운영</span></div>
+    </div>
+  </section>
+</main>
+</body>
+</html>

@@ -93,6 +93,9 @@
   .tabs button[data-csp="summary"][aria-selected="true"]{
     background:var(--purple);
   }
+  .tabs button[data-csp="clean"][aria-selected="true"]{
+    background:#0f766e;
+  }
   .viewer-wrap{
     flex:1;
     min-height:0;
@@ -119,7 +122,7 @@
     .tabs{
       width:100%;
       display:grid;
-      grid-template-columns:1fr 1fr 1fr;
+      grid-template-columns:1fr 1fr;
     }
     .tabs button{
       min-width:0;
@@ -143,6 +146,7 @@
     <nav class="tabs" aria-label="보기 선택">
       <button type="button" data-csp="nhn" aria-selected="true">NHN Cloud</button>
       <button type="button" data-csp="naver" aria-selected="false">NAVER Cloud</button>
+      <button type="button" data-csp="clean" aria-selected="false">발표용 구조도</button>
       <button type="button" data-csp="summary" aria-selected="false">권고안 요약</button>
     </nav>
   </header>
@@ -160,6 +164,10 @@
       src: "NAVER/인프라_구조도.html",
       text: "NAVER Cloud 기준 · Object Storage Private Endpoint, Secure Access/Bastion, c4-g3, T4 중심"
     },
+    clean: {
+      src: "common/리움_발표용_인프라_구조도.html",
+      text: "발표용 구조도 · 핵심 흐름 중심의 간결한 인프라 개요"
+    },
     summary: {
       src: "common/리움_인프라_권고안_요약.html",
       text: "권고안 요약 · 비용, 확정 설계, NHN/NAVER 판단 기준"
@@ -171,7 +179,7 @@
   const buttons = Array.from(document.querySelectorAll("[data-csp]"));
 
   function normalizeCsp(value){
-    return value === "naver" || value === "summary" ? value : "nhn";
+    return value === "naver" || value === "clean" || value === "summary" ? value : "nhn";
   }
 
   function setCsp(value, writeHash){
