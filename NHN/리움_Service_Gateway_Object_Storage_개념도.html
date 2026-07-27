@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>Service Gateway Object Storage 사설 연결</title>
+<style>
+  :root{
+    --ink:#0f172a; --muted:#64748b; --line:#475569;
+    --blue:#2563eb; --green:#059669; --purple:#7c3aed; --red:#dc2626; --orange:#ea580c;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#f8fafc;color:var(--ink);
+    font-family:"Pretendard","Malgun Gothic",-apple-system,"Segoe UI",sans-serif}
+  .canvas{position:relative;width:1180px;height:800px;margin:0 auto;padding:20px}
+  h1{margin:0;font-size:24px;letter-spacing:0;font-weight:850}
+  .sub{margin-top:5px;color:var(--muted);font-size:13px;line-height:1.45}
+  .diagram{position:absolute;left:20px;top:74px;width:1140px;height:708px}
+  svg.wires{position:absolute;left:0;top:0;width:1140px;height:708px;z-index:2;pointer-events:none}
+  .wire{fill:none;stroke:var(--line);stroke-width:1.9;marker-end:url(#arrow);opacity:.72}
+  .wire-g{fill:none;stroke:var(--green);stroke-width:2.2;marker-end:url(#arrowG);opacity:.88}
+  .wire-p{fill:none;stroke:var(--purple);stroke-width:2;marker-end:url(#arrowP);opacity:.86}
+  .wire-r{fill:none;stroke:var(--red);stroke-width:1.8;stroke-dasharray:6 4;opacity:.82}
+  .label{font-size:10px;font-weight:850;fill:#475569}
+  .label-g{font-size:10px;font-weight:850;fill:#047857}
+  .label-p{font-size:10px;font-weight:850;fill:#7c3aed}
+  .zone{position:absolute;z-index:1;border-radius:12px;background:#fff}
+  .zt{position:absolute;left:14px;top:9px;font-size:12px;font-weight:850}
+  .box{position:absolute;z-index:3;background:#fff;border:1.6px solid #cbd5e1;border-radius:8px;
+    box-shadow:0 2px 5px rgba(15,23,42,.10);padding:10px 12px}
+  .box h3{margin:0;font-size:13px;line-height:1.25;font-weight:850}
+  .box p{margin:5px 0 0;color:#475569;font-size:10.5px;line-height:1.38}
+  .sgw{border-color:#7c3aed;border-width:2px;background:#faf5ff;text-align:center}
+  .sgw h3{font-size:15px;color:#7c3aed}
+  .obj{border-color:#7c3aed;background:#fbf7ff}
+  .obj h3{color:#7c3aed}
+  .private{border-color:#2563eb;background:#eff6ff}
+  .private h3{color:#1d4ed8}
+  .pillrow{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+  .pill{border:1px solid #ddd6fe;background:#f5f3ff;color:#6d28d9;border-radius:6px;padding:3px 7px;
+    font-size:10px;font-weight:850;white-space:nowrap}
+  .reason{position:absolute;z-index:3;border-radius:10px;background:#fff;border:1.6px solid #e2e8f0;
+    box-shadow:0 2px 5px rgba(15,23,42,.08);padding:12px}
+  .reason h3{margin:0 0 8px;font-size:13px;font-weight:850;color:#0f172a}
+  .reason ul{margin:0;padding-left:17px;color:#475569;font-size:10.8px;line-height:1.45}
+  .reason li{margin:5px 0}
+  .warn{border-color:#fecaca;background:#fff5f5}
+  .warn h3{color:#dc2626}
+  table{width:100%;border-collapse:collapse;font-size:10px;line-height:1.28}
+  th,td{border:1px solid #e2e8f0;padding:5px 7px;text-align:left;vertical-align:top}
+  th{background:#f1f5f9;color:#334155;font-weight:850}
+  .note{position:absolute;left:210px;top:668px;width:760px;z-index:3;border-top:1px solid #e2e8f0;
+    padding-top:11px;color:#475569;font-size:11px;line-height:1.48}
+  .note b{color:#0f172a}
+</style>
+</head>
+<body>
+<div class="canvas">
+  <h1>Service Gateway — Object Storage 사설 연결</h1>
+  <div class="sub">Service Gateway는 Private Subnet의 서버와 Pod가 Object Storage API에 접근할 때, NAT나 인터넷을 거치지 않고 NHN Cloud 내부 네트워크로 보내는 사설 접근 경로입니다.</div>
+
+  <div class="diagram">
+    <svg class="wires" viewBox="0 0 1140 708">
+      <defs>
+        <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#475569"></path></marker>
+        <marker id="arrowG" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#059669"></path></marker>
+        <marker id="arrowP" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#7c3aed"></path></marker>
+      </defs>
+
+      <!-- Private access path -->
+      <path class="wire-g" d="M372,188 L512,188"></path>
+      <path class="wire-g" d="M372,332 L512,332"></path>
+      <path class="wire-p" d="M656,260 L792,260"></path>
+      <path class="wire-p" d="M942,260 L1030,196"></path>
+      <path class="wire-p" d="M942,260 L1030,260"></path>
+      <path class="wire-p" d="M942,260 L1030,324"></path>
+      <text class="label-g" x="392" y="176">Object Storage API 호출</text>
+      <text class="label-p" x="682" y="248">NHN 내부 네트워크</text>
+
+      <!-- Internet/NAT is not used for this path -->
+      <path class="wire-r" d="M210,514 L512,514 L512,400"></path>
+      <text class="label" x="236" y="504">문서 원본 업로드/조회 경로는 인터넷/NAT로 우회하지 않음</text>
+    </svg>
+
+    <div class="zone" style="left:190px;top:82px;width:230px;height:318px;border:1.8px solid #2563eb;background:#eff6ff">
+      <div class="zt" style="color:#1d4ed8">Private Subnet · NKS</div>
+    </div>
+    <div class="box private" style="left:230px;top:128px;width:142px;height:88px">
+      <h3>API / Worker Pod</h3>
+      <p>문서 업로드, OCR 결과 저장, 리포트 다운로드 요청</p>
+    </div>
+    <div class="box private" style="left:230px;top:272px;width:142px;height:88px">
+      <h3>Batch / RAG Pod</h3>
+      <p>원문 읽기, 임베딩 입력, 처리 결과 아카이브</p>
+    </div>
+
+    <div class="box sgw" style="left:512px;top:186px;width:144px;height:148px">
+      <h3>Service Gateway</h3>
+      <p>Object Storage 전용 사설 엔드포인트<br>선택 서비스와 IP가 1:1 연결</p>
+      <div class="pillrow">
+        <span class="pill">Private IP</span>
+        <span class="pill">No NAT</span>
+        <span class="pill">No Internet</span>
+      </div>
+    </div>
+
+    <div class="box" style="left:792px;top:206px;width:150px;height:108px;border-color:#059669;background:#ecfdf5">
+      <h3 style="color:#047857">Object Storage API</h3>
+      <p>예: kr1-api-object-storage.nhncloudservice.com<br>리전별 엔드포인트 사용</p>
+    </div>
+
+    <div class="box obj" style="left:1030px;top:160px;width:104px;height:70px">
+      <h3>문서 원본</h3>
+      <p>증빙, 시험성적서, 성분표</p>
+    </div>
+    <div class="box obj" style="left:1030px;top:246px;width:104px;height:70px">
+      <h3>OCR 결과</h3>
+      <p>텍스트, 메타데이터, RAG 입력</p>
+    </div>
+    <div class="box obj" style="left:1030px;top:332px;width:104px;height:70px">
+      <h3>WORM / 로그</h3>
+      <p>감사 보존, 리포트 아카이브</p>
+    </div>
+
+    <div class="box warn" style="left:40px;top:470px;width:170px;height:86px">
+      <h3>인터넷 경로 아님</h3>
+      <p>사용자 브라우저가 Service Gateway에 직접 붙는 구조가 아닙니다.</p>
+    </div>
+
+    <div class="reason" style="left:690px;top:424px;width:244px;height:176px">
+      <h3>왜 필요한가</h3>
+      <ul>
+        <li>문서 원본과 OCR 결과가 인터넷 구간을 경유하지 않게 합니다.</li>
+        <li>Private Subnet의 Pod가 Floating IP 없이 Object Storage에 접근할 수 있습니다.</li>
+        <li>Object Storage는 대용량 원문, WORM, 로그 아카이브 저장소라 사설 접근이 보안 설명에 유리합니다.</li>
+      </ul>
+    </div>
+
+    <div class="reason" style="left:954px;top:424px;width:176px;height:176px;border-color:#ddd6fe;background:#faf5ff">
+      <h3 style="color:#7c3aed">구성 시 확인</h3>
+      <ul>
+        <li>Object Storage용 Service Gateway를 생성합니다.</li>
+        <li>격리 VPC에서 토큰 발급도 필요하면 Identity용 Gateway도 같이 둡니다.</li>
+        <li>URL 접근은 엔드포인트와 Gateway IP 매핑을 확인합니다.</li>
+      </ul>
+    </div>
+
+    <div class="box" style="left:40px;top:568px;width:570px;height:88px">
+      <h3>Service Gateway와 Object Storage 역할 구분</h3>
+      <table style="margin-top:8px">
+        <tr><th>구성요소</th><th>역할</th><th>리움에서의 의미</th></tr>
+        <tr><td>Service Gateway</td><td>VPC 안에서 NHN Cloud 서비스로 가는 사설 통로</td><td>문서 처리 Pod의 Object Storage 접근 경로</td></tr>
+        <tr><td>Object Storage</td><td>오브젝트 단위 대용량 저장소</td><td>원문, OCR 결과, 로그, WORM 보관</td></tr>
+      </table>
+    </div>
+
+    <div class="note">
+      <b>정리:</b> 이 박스는 Object Storage가 App Tier 안에 있다는 뜻이 아닙니다.
+      저장소는 NHN Cloud의 관리형 Object Storage이고, Service Gateway는 Private Subnet의 Pod/Node가 그 저장소 API로 갈 때 쓰는 내부망 통로입니다.
+      리움의 문서 원본, OCR 결과, 감사 로그는 민감도가 높으므로 인터넷/NAT 경로보다 Service Gateway 사설 연결로 설명하는 편이 맞습니다.
+    </div>
+  </div>
+</div>
+</body>
+</html>

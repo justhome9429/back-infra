@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>리움 Kubernetes(NKS) 개념 구조</title>
+<style>
+  :root{
+    --ink:#0f172a; --muted:#64748b; --line:#475569;
+    --cluster:#1d4ed8; --cp:#7c3aed; --svc:#0891b2; --node:#2563eb;
+    --pod:#059669; --ctr:#ea580c; --ext:#9333ea;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#f8fafc;color:var(--ink);
+    font-family:"Pretendard","Malgun Gothic",-apple-system,"Segoe UI",sans-serif}
+  .canvas{position:relative;width:1180px;height:790px;margin:0 auto;padding:20px}
+  h1{margin:0;font-size:24px;letter-spacing:0;font-weight:850}
+  .sub{margin-top:5px;color:var(--muted);font-size:13px}
+  .diagram{position:absolute;left:20px;top:72px;width:1140px;height:695px}
+  svg.wires{position:absolute;left:0;top:0;width:1140px;height:695px;z-index:2;pointer-events:none}
+  .wire{fill:none;stroke:var(--line);stroke-width:1.9;marker-end:url(#arrow);opacity:.74}
+  .wire-d{fill:none;stroke:var(--cp);stroke-width:1.8;stroke-dasharray:6 4;marker-end:url(#arrowP);opacity:.86}
+  .wire-b{fill:none;stroke:var(--cluster);stroke-width:1.8;stroke-dasharray:6 4;marker-end:url(#arrowB);opacity:.86}
+  .wire-g{fill:none;stroke:#7c3aed;stroke-width:1.8;stroke-dasharray:6 4;marker-end:url(#arrowG);opacity:.86}
+  .label{font-size:10px;font-weight:800;fill:#475569}
+  .label-p{font-size:10px;font-weight:850;fill:#7c3aed}
+  .label-b{font-size:10px;font-weight:850;fill:#1d4ed8}
+  .zone{position:absolute;z-index:1;border-radius:12px;background:#fff}
+  .zt{position:absolute;left:14px;top:9px;font-size:12px;font-weight:850}
+  .box{position:absolute;z-index:3;background:#fff;border:1.6px solid #cbd5e1;border-radius:8px;
+    box-shadow:0 2px 5px rgba(15,23,42,.10);padding:9px 11px}
+  .box h3{margin:0;font-size:13px;line-height:1.25;font-weight:850}
+  .box p{margin:4px 0 0;color:#475569;font-size:10.5px;line-height:1.35}
+  .box .tag{display:inline-block;margin-left:5px;background:#475569;color:#fff;border-radius:4px;
+    padding:0 5px;font-size:9px;font-weight:850;vertical-align:1px}
+  .chiprow{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+  .chip{border:1px solid #e2e8f0;background:#f8fafc;border-radius:6px;padding:3px 7px;
+    font-size:10px;font-weight:750;color:#334155;white-space:nowrap}
+  .node{position:absolute;z-index:3;border:1.8px solid var(--node);background:#eff6ff;border-radius:10px;padding:10px}
+  .node h3{margin:0 0 7px;color:#1d4ed8;font-size:12.5px;font-weight:850}
+  .pod{border:1.7px solid var(--pod);background:#ecfdf5;border-radius:8px;padding:7px;margin-top:6px}
+  .pod b{display:block;color:#047857;font-size:11.5px;margin-bottom:4px}
+  .ctr{border:1.6px solid var(--ctr);background:#fff7ed;border-radius:6px;padding:5px 7px;
+    color:#c2410c;font-size:10.5px;font-weight:760;line-height:1.25}
+  .mini{font-size:9.5px;color:#64748b;margin-top:5px;line-height:1.25}
+  .badge{position:absolute;right:10px;top:10px;background:#dbeafe;color:#1d4ed8;border-radius:5px;
+    padding:2px 6px;font-size:9.5px;font-weight:850}
+  .legend{position:absolute;left:190px;top:652px;width:760px;z-index:3;border-top:1px solid #e2e8f0;
+    padding-top:10px;color:#475569;font-size:11px;line-height:1.45}
+  .legend b{color:#0f172a}
+  .wlink{cursor:pointer;color:#2563eb;font-weight:850;text-decoration:underline;
+    text-decoration-style:dashed;text-underline-offset:2px;text-decoration-thickness:1.3px}
+  .wlink:hover{color:#1d4ed8;background:#dbeafe;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="canvas">
+  <h1>리움 Kubernetes(NKS) 개념 구조</h1>
+  <div class="sub">쿠버네티스는 Docker 이미지를 직접 만드는 도구가 아니라, 이미지로 실행된 컨테이너들을 Pod 단위로 배치·복구·확장하는 관리자입니다.</div>
+
+  <div class="diagram">
+    <svg class="wires" viewBox="0 0 1140 695">
+      <defs>
+        <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#475569"></path></marker>
+        <marker id="arrowP" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#7c3aed"></path></marker>
+        <marker id="arrowB" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#1d4ed8"></path></marker>
+        <marker id="arrowG" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#7c3aed"></path></marker>
+      </defs>
+
+      <!-- Image and traffic entry -->
+      <path class="wire-b" d="M150,96 L186,96 L186,336 L300,336 L300,350"></path>
+      <path class="wire-b" d="M186,336 L540,336 L540,350"></path>
+      <path class="wire-b" d="M540,336 L775,336 L775,350"></path>
+      <text class="label-b" x="198" y="330">Node가 Docker 이미지 pull</text>
+      <path class="wire" d="M150,304 L404,304"></path>
+      <text class="label" x="208" y="295">사용자 요청</text>
+
+      <!-- Control plane management -->
+      <path class="wire-d" d="M560,152 L560,260"></path>
+      <path class="wire-d" d="M560,204 L305,204 L305,348"></path>
+      <path class="wire-d" d="M560,204 L540,204 L540,348"></path>
+      <path class="wire-d" d="M560,204 L775,204 L775,348"></path>
+      <path class="wire-d" d="M560,204 L560,492"></path>
+      <text class="label-p" x="576" y="198">Pod 배치 · 복구 · 스케일 지시</text>
+
+      <!-- Service routing -->
+      <path class="wire" d="M560,318 L360,318 L360,350"></path>
+      <path class="wire" d="M560,318 L540,318 L540,350"></path>
+      <path class="wire" d="M560,318 L775,318 L775,350"></path>
+      <text class="label" x="575" y="312">Service가 Pod들에 분산</text>
+
+      <!-- Workload relations -->
+      <path class="wire" d="M400,472 L448,472"></path>
+      <path class="wire" d="M548,494 L548,524"></path>
+      <path class="wire" d="M640,472 L688,472"></path>
+      <text class="label" x="405" y="462">enqueue</text>
+      <text class="label" x="642" y="462">LLM 호출</text>
+
+      <!-- External managed services -->
+      <path class="wire-g" d="M640,438 L968,210"></path>
+      <path class="wire-g" d="M540,438 L968,318"></path>
+      <text class="label-p" x="826" y="240">K8s 밖 관리형 서비스</text>
+    </svg>
+
+    <div class="box" style="left:0;top:45px;width:150px;height:110px;border-color:#1d4ed8">
+      <h3>Container Registry<br><span style="font-size:11px;color:#1d4ed8">NCR</span></h3>
+      <p>Docker 이미지 저장소<br>api / worker / vLLM 이미지</p>
+    </div>
+
+    <div class="box" style="left:0;top:260px;width:150px;height:92px">
+      <h3>외부 트래픽</h3>
+      <p>WAF · ALB · API Gateway를 지나 NKS 내부 Service로 진입</p>
+    </div>
+
+    <div class="zone" style="left:180px;top:32px;width:770px;height:602px;border:2.4px solid #1d4ed8;background:#f5f9ff">
+      <div class="zt" style="color:#1d4ed8">NKS Cluster · Production</div>
+    </div>
+
+    <div class="box" style="left:410px;top:48px;width:300px;height:104px;border-color:#7c3aed;background:#faf5ff">
+      <h3 style="color:#7c3aed">Control Plane<span class="tag" style="background:#7c3aed">CSP 관리</span></h3>
+      <p>원하는 상태를 유지합니다. Pod을 어느 Node에 띄울지 정하고, 죽으면 다시 만들고, 필요하면 늘립니다.</p>
+      <div class="chiprow"><span class="chip">API Server</span><span class="chip">Scheduler</span><span class="chip">Controller</span><span class="chip">etcd</span></div>
+    </div>
+
+    <div class="box" style="left:404px;top:260px;width:312px;height:66px;border-color:#0891b2;background:#ecfeff">
+      <h3 style="color:#0891b2">Ingress / Service</h3>
+      <p>고정 주소 역할. 바뀌는 Pod IP 대신 Service 이름으로 트래픽을 안정적으로 분산합니다.</p>
+    </div>
+
+    <div class="node" style="left:220px;top:350px;width:180px;height:132px">
+      <span class="badge">HPA</span>
+      <h3>API Node Pool</h3>
+      <div class="pod">
+        <b>API Pod ×N</b>
+        <div class="ctr">Container: API 서버<br>인증 · 매칭 · 조회</div>
+      </div>
+      <div class="mini">4vCPU/8GB급 Node · Pod 자동 증감</div>
+    </div>
+
+    <div class="node" style="left:455px;top:350px;width:185px;height:132px">
+      <span class="badge">KEDA</span>
+      <h3><span class="wlink" onclick="openLinkedModal('리움_Worker_Node_개념도.html','Worker Node 설명')">Worker Node Pool</span></h3>
+      <div class="pod">
+        <b>Worker Pod ×N</b>
+        <div class="ctr">Container: PaddleOCR<br>ETL · RAG 적재 · Batch</div>
+      </div>
+      <div class="mini">큐 길이를 보고 Worker Pod 증감</div>
+    </div>
+
+    <div class="node" style="left:688px;top:350px;width:185px;height:132px">
+      <span class="badge">수동/조건부</span>
+      <h3>GPU Node Pool</h3>
+      <div class="pod">
+        <b>GPU Pod ×2</b>
+        <div class="ctr">Container: <span class="wlink" onclick="openLinkedModal('리움_자체호스팅_LLM_개념도.html','자체호스팅 LLM 설명')">vLLM<br>Qwen3-8B-AWQ</span></div>
+      </div>
+      <div class="mini">T4 16GB ×2 독립 Replica</div>
+    </div>
+
+    <div class="node" style="left:455px;top:524px;width:185px;height:88px;border-color:#9333ea;background:#faf5ff">
+      <h3 style="color:#9333ea"><span class="wlink" onclick="openLinkedModal('리움_RabbitMQ_Quorum_개념도.html','RabbitMQ Quorum 설명')">RabbitMQ Quorum</span></h3>
+      <div class="pod" style="border-color:#9333ea;background:#fff">
+        <b style="color:#7c3aed">RabbitMQ Pod ×3</b>
+        <div class="mini">durable · ack · DLQ · retry</div>
+      </div>
+    </div>
+
+    <div class="box" style="left:980px;top:170px;width:150px;height:92px;border-color:#ea580c;background:#fff7ed">
+      <h3 style="color:#ea580c">PostgreSQL</h3>
+      <p>Primary / Standby / Read Replica<br>Pod 안이 아니라 관리형 DB</p>
+    </div>
+
+    <div class="box" style="left:980px;top:292px;width:150px;height:92px;border-color:#7c3aed;background:#faf5ff">
+      <h3 style="color:#7c3aed">Object Storage</h3>
+      <p>문서 원본 · OCR 결과 · 로그 아카이브</p>
+    </div>
+
+    <div class="box" style="left:980px;top:414px;width:150px;height:88px;border-color:#64748b;background:#fff">
+      <h3>Monitoring / Log</h3>
+      <p>Pod 상태, Node 사용량, 애플리케이션 로그 확인</p>
+    </div>
+
+    <div class="legend">
+      <b>읽는 순서:</b> Docker 이미지는 NCR에 저장되고, Node가 이미지를 내려받아 컨테이너로 실행합니다.
+      Kubernetes는 컨테이너를 직접 흩뿌리는 것이 아니라 <b>Pod</b> 단위로 묶어 <b>Node</b>에 배치하고,
+      Control Plane이 장애 복구·스케일링·배포 상태를 계속 맞춥니다. DB와 Object Storage는 K8s 밖의 관리형 서비스입니다.
+    </div>
+  </div>
+</div>
+<script>
+  function openLinkedModal(src, title){
+    if (window.parent && window.parent !== window && typeof window.parent.openModal === 'function') {
+      window.parent.openModal(src, title);
+    } else {
+      window.location.href = src;
+    }
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>리움 비Production 환경 설명</title>
+<style>
+  :root{
+    --ink:#0f172a; --muted:#64748b; --line:#475569;
+    --blue:#2563eb; --green:#059669; --orange:#ea580c; --purple:#7c3aed; --red:#dc2626;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#f8fafc;color:var(--ink);
+    font-family:"Pretendard","Malgun Gothic",-apple-system,"Segoe UI",sans-serif}
+  .canvas{position:relative;width:1180px;height:860px;margin:0 auto;padding:20px}
+  h1{margin:0;font-size:24px;letter-spacing:0;font-weight:850}
+  .sub{margin-top:5px;color:var(--muted);font-size:13px;line-height:1.45}
+  .diagram{position:absolute;left:20px;top:80px;width:1140px;height:760px}
+  svg.wires{position:absolute;left:0;top:0;width:1140px;height:760px;z-index:2;pointer-events:none}
+  .wire{fill:none;stroke:var(--line);stroke-width:1.8;marker-end:url(#arrow);opacity:.72}
+  .wire-b{fill:none;stroke:var(--blue);stroke-width:2;marker-end:url(#arrowB);opacity:.82}
+  .wire-g{fill:none;stroke:var(--green);stroke-width:1.9;marker-end:url(#arrowG);opacity:.84}
+  .wire-d{fill:none;stroke:var(--purple);stroke-width:1.8;stroke-dasharray:6 4;marker-end:url(#arrowP);opacity:.84}
+  .label{font-size:10px;font-weight:850;fill:#475569}
+  .label-b{font-size:10px;font-weight:850;fill:#1d4ed8}
+  .zone{position:absolute;z-index:1;border-radius:12px;background:#fff}
+  .zt{position:absolute;left:14px;top:9px;font-size:12px;font-weight:850}
+  .box{position:absolute;z-index:3;background:#fff;border:1.6px solid #cbd5e1;border-radius:8px;
+    box-shadow:0 2px 5px rgba(15,23,42,.10);padding:10px 12px}
+  .box h3{margin:0;font-size:13px;line-height:1.25;font-weight:850}
+  .box p{margin:5px 0 0;color:#475569;font-size:10.5px;line-height:1.38}
+  .tag{display:inline-block;margin-left:5px;background:#475569;color:#fff;border-radius:4px;
+    padding:0 5px;font-size:9px;font-weight:850;vertical-align:1px}
+  .env{border-width:2px;text-align:center}
+  .env h3{font-size:16px}
+  .prod{border-color:#2563eb;background:#f5f9ff}
+  .prod h3{color:#1d4ed8}
+  .val{border-color:#059669;background:#ecfdf5}
+  .val h3{color:#047857}
+  .dev{border-color:#ea580c;background:#fff7ed}
+  .dev h3{color:#c2410c}
+  .pillrow{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+  .pill{border:1px solid #e2e8f0;background:#f8fafc;color:#334155;border-radius:6px;padding:3px 7px;
+    font-size:10px;font-weight:850;white-space:nowrap}
+  .reason{position:absolute;z-index:3;border-radius:10px;background:#fff;border:1.6px solid #e2e8f0;
+    box-shadow:0 2px 5px rgba(15,23,42,.08);padding:12px}
+  .reason h3{margin:0 0 8px;font-size:13px;font-weight:850;color:#0f172a}
+  .reason ul{margin:0;padding-left:17px;color:#475569;font-size:10.8px;line-height:1.45}
+  .reason li{margin:5px 0}
+  .warn{border-color:#fecaca;background:#fff5f5}
+  .warn h3{color:#dc2626}
+  table{width:100%;border-collapse:collapse;font-size:9.8px;line-height:1.28}
+  th,td{border:1px solid #e2e8f0;padding:5px 7px;text-align:left;vertical-align:top}
+  th{background:#f1f5f9;color:#334155;font-weight:850}
+  td strong{color:#0f172a}
+  .note{position:absolute;left:205px;top:712px;width:760px;z-index:3;border-top:1px solid #e2e8f0;
+    padding-top:11px;color:#475569;font-size:11px;line-height:1.48}
+  .note b{color:#0f172a}
+</style>
+</head>
+<body>
+<div class="canvas">
+  <h1>비Production 환경이 별도 NKS 클러스터인 이유</h1>
+  <div class="sub">비Production은 운영 트래픽을 받지 않는 검증/개발 환경입니다. 리움은 Production, Validation, Development를 namespace만 나누는 방식이 아니라 NKS 클러스터 단위로 분리합니다.</div>
+
+  <div class="diagram">
+    <svg class="wires" viewBox="0 0 1140 760">
+      <defs>
+        <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#475569"></path></marker>
+        <marker id="arrowB" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#2563eb"></path></marker>
+        <marker id="arrowG" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#059669"></path></marker>
+        <marker id="arrowP" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#7c3aed"></path></marker>
+      </defs>
+
+      <path class="wire-b" d="M245,136 L382,136"></path>
+      <path class="wire-g" d="M548,136 L684,136"></path>
+      <path class="wire" d="M850,136 L990,136"></path>
+      <text class="label-b" x="276" y="124">운영 배포 전 검증 흐름</text>
+      <text class="label" x="594" y="124">승인 후 승격</text>
+      <text class="label" x="884" y="124">운영 반영</text>
+
+      <path class="wire-d" d="M474,248 L474,330"></path>
+      <path class="wire-d" d="M774,248 L774,330"></path>
+      <text class="label" x="490" y="314">각 환경별 Control Plane</text>
+
+      <path class="wire" d="M324,448 L324,490 L724,490"></path>
+      <path class="wire" d="M624,448 L624,490"></path>
+      <path class="wire" d="M924,448 L924,490 L724,490"></path>
+      <text class="label" x="514" y="480">소스/이미지는 공유 가능, 실행 클러스터는 분리</text>
+    </svg>
+
+    <div class="box" style="left:40px;top:90px;width:205px;height:92px;border-color:#ea580c;background:#fff7ed">
+      <h3 style="color:#c2410c">Development</h3>
+      <p>개발자 단위 테스트, 기능 구현, 빠른 실험을 위한 비용 절감 환경</p>
+    </div>
+    <div class="box" style="left:382px;top:90px;width:166px;height:92px;border-color:#059669;background:#ecfdf5">
+      <h3 style="color:#047857">Validation</h3>
+      <p>배포 전 통합검증, 일부 부하검증, 모델 회귀평가</p>
+    </div>
+    <div class="box" style="left:684px;top:90px;width:166px;height:92px;border-color:#2563eb;background:#eff6ff">
+      <h3 style="color:#1d4ed8">Release Gate</h3>
+      <p>검증 통과 빌드만 운영 배포 대상으로 승격</p>
+    </div>
+    <div class="box" style="left:990px;top:90px;width:128px;height:92px;border-color:#2563eb;background:#f5f9ff">
+      <h3 style="color:#1d4ed8">Production</h3>
+      <p>실 사용자 24×7, HA, 장애 대응 기준 환경</p>
+    </div>
+
+    <div class="box env prod" style="left:168px;top:248px;width:210px;height:200px">
+      <h3>Production NKS</h3>
+      <p>실제 기업·정부 사용<br>Multi-AZ 운영 기준</p>
+      <div class="pillrow">
+        <span class="pill">API 4/8 ×3</span>
+        <span class="pill">Worker 4/8 ×2</span>
+        <span class="pill">MQ 2/4 ×3</span>
+        <span class="pill">DB HA + Read Replica</span>
+        <span class="pill">24×7</span>
+      </div>
+    </div>
+
+    <div class="box env val" style="left:468px;top:248px;width:210px;height:200px">
+      <h3>Validation NKS</h3>
+      <p>운영 반영 전 최종 검증<br>운영과 유사하지만 축소</p>
+      <div class="pillrow">
+        <span class="pill">App+Worker 4/8 ×2</span>
+        <span class="pill">단일 DB 2/8 ×1</span>
+        <span class="pill">통합검증</span>
+        <span class="pill">부하검증 일부</span>
+        <span class="pill">모델 회귀평가</span>
+      </div>
+    </div>
+
+    <div class="box env dev" style="left:768px;top:248px;width:210px;height:200px">
+      <h3>Development NKS</h3>
+      <p>개발과 단위 테스트<br>최소 비용 기준</p>
+      <div class="pillrow">
+        <span class="pill">App+Worker 2/4 ×2</span>
+        <span class="pill">단일 DB 2/8 ×1</span>
+        <span class="pill">개발 테스트</span>
+        <span class="pill">기능 실험</span>
+        <span class="pill">샘플 데이터</span>
+      </div>
+    </div>
+
+    <div class="box" style="left:530px;top:492px;width:204px;height:70px;border-color:#7c3aed;background:#faf5ff;text-align:center">
+      <h3 style="color:#7c3aed">공통 CI/CD · NCR</h3>
+      <p>같은 Docker 이미지를 환경별 NKS에 순차 배포</p>
+    </div>
+
+    <div class="reason" style="left:40px;top:496px;width:250px;height:126px">
+      <h3>왜 별도 클러스터인가</h3>
+      <ul>
+        <li>배포 실수가 Production으로 전파되는 것을 줄입니다.</li>
+        <li>권한·Secret·네트워크 정책을 환경별로 분리합니다.</li>
+        <li>검증 부하가 운영 Pod와 자원을 경쟁하지 않습니다.</li>
+      </ul>
+    </div>
+
+    <div class="reason warn" style="left:840px;top:496px;width:250px;height:126px">
+      <h3>Namespace만 나누면</h3>
+      <ul>
+        <li>클러스터 장애나 설정 실수가 모든 환경에 영향을 줄 수 있습니다.</li>
+        <li>운영/검증 권한 경계가 흐려집니다.</li>
+        <li>부하 테스트가 같은 Control Plane과 Node 자원을 흔들 수 있습니다.</li>
+      </ul>
+    </div>
+
+    <div class="box" style="left:320px;top:584px;width:500px;height:108px">
+      <h3>사양 차이를 둔 이유</h3>
+      <table style="margin-top:8px">
+        <tr><th>환경</th><th>기준</th><th>이유</th></tr>
+        <tr><td>Validation</td><td>4vCPU/8GB ×2</td><td>운영 배포 전 통합검증과 일부 부하검증을 수행해야 하므로 Prod와 같은 4/8 노드 기준</td></tr>
+        <tr><td>Development</td><td>2vCPU/4GB ×2</td><td>개발·단위 테스트 중심이므로 비용을 줄인 최소 실행 기준</td></tr>
+      </table>
+    </div>
+
+    <div class="note">
+      <b>정리:</b> 비Production 환경은 운영을 대체하는 작은 복사본이 아니라, 운영을 안전하게 만들기 위한 분리된 검증/개발 공간입니다.
+      리움은 Dev, Val, Prod를 각각 별도 NKS 클러스터로 두어 장애 전파, 권한 오설정, 배포 실수, 자원 경합을 줄입니다.
+      그래서 구조도에는 Production VPC를 크게 그리고, 오른쪽에 비Production 별도 NKS 클러스터를 축약해서 표시했습니다.
+    </div>
+  </div>
+</div>
+</body>
+</html>

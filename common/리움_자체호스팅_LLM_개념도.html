@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>자체호스팅 LLM 설명</title>
+<style>
+  :root{
+    --ink:#0f172a; --muted:#64748b; --line:#475569;
+    --blue:#2563eb; --green:#059669; --orange:#ea580c; --purple:#7c3aed; --red:#dc2626;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#f8fafc;color:var(--ink);
+    font-family:"Pretendard","Malgun Gothic",-apple-system,"Segoe UI",sans-serif}
+  .canvas{position:relative;width:1180px;height:865px;margin:0 auto;padding:20px}
+  h1{margin:0;font-size:24px;letter-spacing:0;font-weight:850}
+  .sub{margin-top:5px;color:var(--muted);font-size:13px;line-height:1.45}
+  .diagram{position:absolute;left:20px;top:82px;width:1140px;height:760px}
+  svg.wires{position:absolute;left:0;top:0;width:1140px;height:760px;z-index:2;pointer-events:none}
+  .wire{fill:none;stroke:var(--line);stroke-width:1.9;marker-end:url(#arrow);opacity:.72}
+  .wire-p{fill:none;stroke:var(--purple);stroke-width:2.1;marker-end:url(#arrowP);opacity:.86}
+  .wire-g{fill:none;stroke:var(--green);stroke-width:1.9;marker-end:url(#arrowG);opacity:.84}
+  .wire-r{fill:none;stroke:var(--red);stroke-width:1.8;stroke-dasharray:6 4;opacity:.82}
+  .stop{stroke:var(--red);stroke-width:2.5;stroke-linecap:round}
+  .label{font-size:10px;font-weight:850;fill:#475569}
+  .label-p{font-size:10px;font-weight:850;fill:#7c3aed}
+  .label-g{font-size:10px;font-weight:850;fill:#047857}
+  .label-r{font-size:10px;font-weight:850;fill:#dc2626}
+  .zone{position:absolute;z-index:1;border-radius:12px;background:#fff}
+  .zt{position:absolute;left:14px;top:9px;font-size:12px;font-weight:850}
+  .box{position:absolute;z-index:3;background:#fff;border:1.6px solid #cbd5e1;border-radius:8px;
+    box-shadow:0 2px 5px rgba(15,23,42,.10);padding:10px 12px}
+  .box h3{margin:0;font-size:13px;line-height:1.25;font-weight:850}
+  .box p{margin:5px 0 0;color:#475569;font-size:10.5px;line-height:1.38}
+  .lb{border-color:#7c3aed;border-width:2px;background:#faf5ff;text-align:center}
+  .lb h3{font-size:15px;color:#7c3aed}
+  .replica{border-color:#2563eb;border-width:2px;background:#f5f9ff}
+  .replica h3{color:#1d4ed8;font-size:14px}
+  .model{border:1.6px solid #ea580c;background:#fff7ed;border-radius:7px;padding:7px 8px;
+    color:#c2410c;font-size:10.5px;font-weight:800;line-height:1.28;margin-top:7px}
+  .pillrow{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+  .pill{border:1px solid #ddd6fe;background:#f5f3ff;color:#6d28d9;border-radius:6px;padding:3px 7px;
+    font-size:10px;font-weight:850;white-space:nowrap}
+  .reason{position:absolute;z-index:3;border-radius:10px;background:#fff;border:1.6px solid #e2e8f0;
+    box-shadow:0 2px 5px rgba(15,23,42,.08);padding:12px}
+  .reason h3{margin:0 0 8px;font-size:13px;font-weight:850;color:#0f172a}
+  .reason ul{margin:0;padding-left:17px;color:#475569;font-size:10.7px;line-height:1.43}
+  .reason li{margin:5px 0}
+  .warn{border-color:#fecaca;background:#fff5f5}
+  .warn h3{color:#dc2626}
+  table{width:100%;border-collapse:collapse;font-size:10px;line-height:1.28}
+  th,td{border:1px solid #e2e8f0;padding:5px 7px;text-align:left;vertical-align:top}
+  th{background:#f1f5f9;color:#334155;font-weight:850}
+  td strong{color:#0f172a}
+  .note{position:absolute;left:205px;top:716px;width:760px;z-index:3;border-top:1px solid #e2e8f0;
+    padding-top:11px;color:#475569;font-size:11px;line-height:1.48}
+  .note b{color:#0f172a}
+</style>
+</head>
+<body>
+<div class="canvas">
+  <h1>자체호스팅 LLM · T4 ×2 Replica</h1>
+  <div class="sub">리움의 LLM은 외부 LLM API로 문서와 정책 근거를 보내는 구조가 아니라, 사설망 안의 T4 GPU Replica에서 Qwen3-8B-AWQ 모델을 vLLM으로 서빙하는 구조입니다.</div>
+
+  <div class="diagram">
+    <svg class="wires" viewBox="0 0 1140 760">
+      <defs>
+        <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#475569"></path></marker>
+        <marker id="arrowP" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#7c3aed"></path></marker>
+        <marker id="arrowG" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#059669"></path></marker>
+      </defs>
+
+      <!-- Serving path -->
+      <path class="wire" d="M178,144 L314,144"></path>
+      <path class="wire-p" d="M464,144 L548,144"></path>
+      <path class="wire-p" d="M668,128 L772,88"></path>
+      <path class="wire-p" d="M668,160 L772,220"></path>
+      <path class="wire-g" d="M958,92 L1050,148"></path>
+      <path class="wire-g" d="M958,224 L1050,148"></path>
+      <text class="label" x="204" y="132">RAG/리포트 질의</text>
+      <text class="label-p" x="482" y="132">사설 호출</text>
+      <text class="label-p" x="690" y="82">분산</text>
+      <text class="label-g" x="976" y="132">응답 반환</text>
+
+      <!-- External API blocked -->
+      <path class="wire-r" d="M389,188 L389,250"></path>
+      <line class="stop" x1="379" y1="218" x2="399" y2="238"></line>
+      <line class="stop" x1="399" y1="218" x2="379" y2="238"></line>
+      <text class="label-r" x="406" y="231">외부 LLM API 전송 차단</text>
+    </svg>
+
+    <div class="box" style="left:40px;top:100px;width:138px;height:88px;border-color:#2563eb;background:#eff6ff">
+      <h3 style="color:#1d4ed8">Worker / RAG</h3>
+      <p>정책 공고, 기업 문서, 매칭 결과를 근거로 LLM 질의를 생성합니다.</p>
+    </div>
+
+    <div class="box" style="left:314px;top:100px;width:150px;height:88px;border-color:#059669;background:#ecfdf5">
+      <h3 style="color:#047857">Prompt Context</h3>
+      <p>검색 근거, 산식 결과, 사용자 질문, 답변 형식 조건</p>
+    </div>
+
+    <div class="box lb" style="left:548px;top:98px;width:120px;height:92px">
+      <h3>Private AI LB</h3>
+      <p>사설망 내부 LLM 엔드포인트</p>
+      <div class="pillrow">
+        <span class="pill">SG-AI</span>
+      </div>
+    </div>
+
+    <div class="box replica" style="left:772px;top:42px;width:186px;height:124px">
+      <h3>LLM Replica A</h3>
+      <p>NVIDIA T4 16GB<br>독립 모델 서버</p>
+      <div class="model">vLLM Server<br>Qwen3-8B-AWQ</div>
+    </div>
+
+    <div class="box replica" style="left:772px;top:202px;width:186px;height:124px">
+      <h3>LLM Replica B</h3>
+      <p>NVIDIA T4 16GB<br>독립 모델 서버</p>
+      <div class="model">vLLM Server<br>Qwen3-8B-AWQ</div>
+    </div>
+
+    <div class="box" style="left:1050px;top:104px;width:86px;height:88px;border-color:#7c3aed;background:#faf5ff">
+      <h3 style="color:#7c3aed">LLM 응답</h3>
+      <p>추천 근거, 정책 리포트, 설명 문장</p>
+    </div>
+
+    <div class="box warn" style="left:305px;top:244px;width:168px;height:82px">
+      <h3>외부 LLM API 아님</h3>
+      <p>시험성적서, 성분표, 기업 자료를 외부 모델 사업자에게 전송하지 않습니다.</p>
+    </div>
+
+    <div class="reason" style="left:60px;top:336px;width:330px;height:158px">
+      <h3>왜 자체호스팅인가</h3>
+      <ul>
+        <li>기업 업로드 문서와 정책 근거의 외부 전송을 줄입니다.</li>
+        <li>공공·기업 데이터 경계를 설명하기 쉽습니다.</li>
+        <li>모델, 프롬프트, 로그, 버전을 운영자가 통제할 수 있습니다.</li>
+        <li>RAG/Rule Engine 결과를 내부망에서 바로 근거 설명에 사용합니다.</li>
+      </ul>
+    </div>
+
+    <div class="reason" style="left:405px;top:336px;width:330px;height:158px">
+      <h3>왜 T4 ×2 Replica인가</h3>
+      <ul>
+        <li>AWQ 4-bit 8B급 모델을 T4 16GB에서 PoC하기 위한 현실적인 초기 후보입니다.</li>
+        <li>1대만 두면 GPU 장애가 LLM 기능 전체 장애가 됩니다.</li>
+        <li>2대 독립 Replica는 한 대 장애 시 다른 한 대가 요청을 계속 받습니다.</li>
+        <li>Tensor Parallel이 아니라 HA와 동시 처리량을 위한 수평 확장입니다.</li>
+      </ul>
+    </div>
+
+    <div class="reason" style="left:750px;top:336px;width:330px;height:158px">
+      <h3>주의할 점</h3>
+      <ul>
+        <li>Replica 수를 늘려도 단일 요청 생성속도가 그대로 2배 빨라지는 것은 아닙니다.</li>
+        <li>긴 Context, 큰 출력 토큰, 높은 동시성은 KV cache와 VRAM을 압박합니다.</li>
+        <li>OCR은 기본적으로 CPU Worker에서 처리하고 T4 LLM과 상시 경쟁시키지 않습니다.</li>
+        <li>피크 동시 추론 16건은 부하테스트로 검증해야 합니다.</li>
+      </ul>
+    </div>
+
+    <div class="box" style="left:60px;top:512px;width:500px;height:158px">
+      <h3>구성 요소 역할</h3>
+      <table style="margin-top:8px">
+        <tr><th>요소</th><th>역할</th><th>리움에서의 의미</th></tr>
+        <tr><td>T4 GPU</td><td>16GB VRAM 추론 GPU</td><td>초기 자체호스팅 LLM의 비용 현실적인 기준선</td></tr>
+        <tr><td>Qwen3-8B-AWQ</td><td>AWQ 양자화 8B급 LLM</td><td>작은 GPU에서 운영 가능한 근거 설명용 모델 후보</td></tr>
+        <tr><td>vLLM</td><td>LLM 서빙 엔진</td><td>OpenAI 호환 API, batching, KV cache 기반 서빙</td></tr>
+        <tr><td>Replica ×2</td><td>동일 모델 서버 2개</td><td>한 대 장애와 rolling update를 견디는 운영 기본형</td></tr>
+      </table>
+    </div>
+
+    <div class="box" style="left:590px;top:512px;width:500px;height:158px">
+      <h3>확장 판단 기준</h3>
+      <table style="margin-top:8px">
+        <tr><th>증상</th><th>우선 조치</th><th>다음 조치</th></tr>
+        <tr><td>동시 요청 증가</td><td>vLLM 설정 튜닝, T4 Replica 추가</td><td>T4 ×4, ×6 수평 확장</td></tr>
+        <tr><td>단일 요청이 느림</td><td>context/output token 제한, prompt 축소</td><td>더 큰 VRAM·상위 GPU로 Scale-up</td></tr>
+        <tr><td>VRAM 부족</td><td>max model len, KV cache, batch 제한</td><td>NAVER L4/L40S 또는 NHN A100급 후보 검토</td></tr>
+        <tr><td>품질 부족</td><td>RAG 근거 품질, 프롬프트, 평가셋 개선</td><td>모델 크기 상향 또는 fine-tuning 검토</td></tr>
+      </table>
+    </div>
+
+    <div class="note" style="left:110px;top:690px;width:960px;font-size:10.8px;line-height:1.4">
+      <b>정리:</b> `자체호스팅 LLM · T4 ×2 Replica · Qwen3-8B-AWQ + vLLM`은 리움의 민감 문서와 정책 근거를 외부 LLM API로 보내지 않고, 사설망 안에서 LLM 답변을 생성하겠다는 구성입니다.
+      T4 두 대는 하나의 큰 GPU처럼 묶는 구성이 아니라, 같은 모델 서버를 두 벌 띄우는 독립 Replica입니다.
+      따라서 장점은 HA와 동시 처리량이고, 한 요청 자체의 속도나 긴 Context 한계는 vLLM 튜닝, Replica 추가, 상위 GPU 검토로 별도 대응해야 합니다.
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>RabbitMQ Quorum 설명</title>
+<style>
+  :root{
+    --ink:#0f172a; --muted:#64748b; --line:#475569;
+    --blue:#2563eb; --green:#059669; --orange:#ea580c; --purple:#7c3aed; --red:#dc2626;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#f8fafc;color:var(--ink);
+    font-family:"Pretendard","Malgun Gothic",-apple-system,"Segoe UI",sans-serif}
+  .canvas{position:relative;width:1180px;height:875px;margin:0 auto;padding:20px}
+  h1{margin:0;font-size:24px;letter-spacing:0;font-weight:850}
+  .sub{margin-top:5px;color:var(--muted);font-size:13px;line-height:1.45}
+  .diagram{position:absolute;left:20px;top:80px;width:1140px;height:775px}
+  svg.wires{position:absolute;left:0;top:0;width:1140px;height:775px;z-index:2;pointer-events:none}
+  .wire{fill:none;stroke:var(--line);stroke-width:1.9;marker-end:url(#arrow);opacity:.72}
+  .wire-p{fill:none;stroke:var(--purple);stroke-width:2.1;marker-end:url(#arrowP);opacity:.86}
+  .wire-g{fill:none;stroke:var(--green);stroke-width:1.9;marker-end:url(#arrowG);opacity:.84}
+  .wire-d{fill:none;stroke:var(--purple);stroke-width:1.8;stroke-dasharray:6 4;marker-end:url(#arrowP);opacity:.78}
+  .label{font-size:10px;font-weight:850;fill:#475569}
+  .label-p{font-size:10px;font-weight:850;fill:#7c3aed}
+  .zone{position:absolute;z-index:1;border-radius:12px;background:#fff}
+  .zt{position:absolute;left:14px;top:9px;font-size:12px;font-weight:850}
+  .box{position:absolute;z-index:3;background:#fff;border:1.6px solid #cbd5e1;border-radius:8px;
+    box-shadow:0 2px 5px rgba(15,23,42,.10);padding:10px 12px}
+  .box h3{margin:0;font-size:13px;line-height:1.25;font-weight:850}
+  .box p{margin:5px 0 0;color:#475569;font-size:10.5px;line-height:1.38}
+  .mq{border-color:#7c3aed;border-width:2px;background:#faf5ff;text-align:center}
+  .mq h3{font-size:15px;color:#7c3aed}
+  .node{position:absolute;z-index:3;border:1.8px solid #7c3aed;background:#fff;border-radius:10px;
+    box-shadow:0 2px 5px rgba(15,23,42,.10);padding:10px 12px;text-align:center}
+  .node h3{margin:0;color:#7c3aed;font-size:12.5px;font-weight:850}
+  .node p{margin:5px 0 0;color:#475569;font-size:10px;line-height:1.3}
+  .pillrow{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+  .pill{border:1px solid #ddd6fe;background:#f5f3ff;color:#6d28d9;border-radius:6px;padding:3px 7px;
+    font-size:10px;font-weight:850;white-space:nowrap}
+  .reason{position:absolute;z-index:3;border-radius:10px;background:#fff;border:1.6px solid #e2e8f0;
+    box-shadow:0 2px 5px rgba(15,23,42,.08);padding:12px}
+  .reason h3{margin:0 0 8px;font-size:13px;font-weight:850;color:#0f172a}
+  .reason ul{margin:0;padding-left:17px;color:#475569;font-size:10.7px;line-height:1.43}
+  .reason li{margin:5px 0}
+  .warn{border-color:#fecaca;background:#fff5f5}
+  .warn h3{color:#dc2626}
+  table{width:100%;border-collapse:collapse;font-size:10px;line-height:1.28}
+  th,td{border:1px solid #e2e8f0;padding:5px 7px;text-align:left;vertical-align:top}
+  th{background:#f1f5f9;color:#334155;font-weight:850}
+  td strong{color:#0f172a}
+  .note{position:absolute;left:205px;top:724px;width:760px;z-index:3;border-top:1px solid #e2e8f0;
+    padding-top:11px;color:#475569;font-size:11px;line-height:1.48}
+  .note b{color:#0f172a}
+</style>
+</head>
+<body>
+<div class="canvas">
+  <h1>RabbitMQ Quorum ×3가 하는 일</h1>
+  <div class="sub">RabbitMQ는 오래 걸리는 OCR·ETL·RAG 작업을 API 요청에서 분리해 안전하게 줄 세우는 메시지 큐입니다. Quorum ×3는 메시지를 3개 RabbitMQ 노드에 복제해 1개 노드 장애에도 큐를 유지하려는 구성입니다.</div>
+
+  <div class="diagram">
+    <svg class="wires" viewBox="0 0 1140 775">
+      <defs>
+        <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#475569"></path></marker>
+        <marker id="arrowP" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#7c3aed"></path></marker>
+        <marker id="arrowG" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#059669"></path></marker>
+      </defs>
+
+      <!-- Work flow -->
+      <path class="wire" d="M178,136 L306,136"></path>
+      <path class="wire-p" d="M456,136 L548,136"></path>
+      <path class="wire" d="M686,136 L820,136"></path>
+      <path class="wire-g" d="M970,136 L1060,136"></path>
+      <text class="label" x="206" y="124">요청 접수</text>
+      <text class="label-p" x="470" y="124">enqueue</text>
+      <text class="label" x="712" y="124">consume</text>
+      <text class="label" x="998" y="124">결과 저장</text>
+
+      <!-- Quorum replication -->
+      <path class="wire-d" d="M604,226 L472,322"></path>
+      <path class="wire-d" d="M604,226 L604,322"></path>
+      <path class="wire-d" d="M604,226 L736,322"></path>
+      <text class="label-p" x="616" y="290">Raft 복제 · 과반수 합의</text>
+
+      <!-- Failure tolerance -->
+      <path class="wire-g" d="M472,402 L604,458"></path>
+      <path class="wire-g" d="M736,402 L604,458"></path>
+      <text class="label" x="616" y="434">2/3 살아 있으면 majority 유지</text>
+    </svg>
+
+    <div class="box" style="left:40px;top:92px;width:138px;height:88px;border-color:#2563eb;background:#eff6ff">
+      <h3 style="color:#1d4ed8">API Pod</h3>
+      <p>사용자 요청을 받고 오래 걸리는 작업을 바로 처리하지 않고 큐에 넣습니다.</p>
+    </div>
+
+    <div class="box" style="left:306px;top:92px;width:150px;height:88px;border-color:#059669;background:#ecfdf5">
+      <h3 style="color:#047857">Job Message</h3>
+      <p>문서 ID, 처리 단계, 재시도 횟수, 우선순위 같은 작업 단위</p>
+    </div>
+
+    <div class="box mq" style="left:548px;top:78px;width:138px;height:118px">
+      <h3>RabbitMQ<br>Quorum</h3>
+      <p>durable queue<br>ack · retry · DLQ</p>
+      <div class="pillrow">
+        <span class="pill">SG-MQ</span>
+        <span class="pill">5672</span>
+      </div>
+    </div>
+
+    <div class="box" style="left:820px;top:92px;width:150px;height:88px;border-color:#ea580c;background:#fff7ed">
+      <h3 style="color:#c2410c">Worker Pod</h3>
+      <p>큐에서 작업을 꺼내 OCR, ETL, RAG 적재를 수행합니다.</p>
+    </div>
+
+    <div class="box" style="left:1060px;top:92px;width:78px;height:88px;border-color:#7c3aed;background:#faf5ff">
+      <h3 style="color:#7c3aed">DB / Object</h3>
+      <p>결과 저장</p>
+    </div>
+
+    <div class="zone" style="left:390px;top:292px;width:430px;height:142px;border:1.8px solid #7c3aed;background:#faf5ff">
+      <div class="zt" style="color:#7c3aed">RabbitMQ Cluster · Production</div>
+    </div>
+    <div class="node" style="left:420px;top:322px;width:110px;height:80px">
+      <h3>MQ Pod 1</h3>
+      <p>Leader 또는 Follower<br>PV 150GB</p>
+    </div>
+    <div class="node" style="left:550px;top:322px;width:110px;height:80px">
+      <h3>MQ Pod 2</h3>
+      <p>Follower<br>PV 150GB</p>
+    </div>
+    <div class="node" style="left:680px;top:322px;width:110px;height:80px">
+      <h3>MQ Pod 3</h3>
+      <p>Follower<br>PV 150GB</p>
+    </div>
+
+    <div class="box" style="left:500px;top:458px;width:208px;height:64px;border-color:#059669;background:#ecfdf5;text-align:center">
+      <h3 style="color:#047857">1개 장애 허용</h3>
+      <p>3개 중 2개가 살아 있으면 큐의 과반수가 남아 새 leader 선출과 메시지 처리가 가능합니다.</p>
+    </div>
+
+    <div class="reason" style="left:40px;top:466px;width:250px;height:152px">
+      <h3>왜 큐가 필요한가</h3>
+      <ul>
+        <li>OCR·ETL·RAG 작업은 API 응답 시간보다 오래 걸릴 수 있습니다.</li>
+        <li>요청이 몰려도 Worker가 처리 가능한 속도로 천천히 소비합니다.</li>
+        <li>Worker 장애 시 ack 되지 않은 메시지를 다시 처리할 수 있습니다.</li>
+        <li>실패가 반복되는 작업은 DLQ로 보내 사람이 확인합니다.</li>
+      </ul>
+    </div>
+
+    <div class="reason" style="left:846px;top:466px;width:250px;height:152px">
+      <h3>왜 3개인가</h3>
+      <ul>
+        <li>Quorum은 과반수 합의가 핵심이라 홀수 구성이 유리합니다.</li>
+        <li>1개는 HA가 없고, 2개는 1개 장애 시 과반수를 만들 수 없습니다.</li>
+        <li>3개는 2/3 과반수를 유지해 1개 장애와 rolling update를 견딥니다.</li>
+        <li>5개는 2개 장애까지 견디지만 초기 리움에는 비용과 지연 부담이 큽니다.</li>
+      </ul>
+    </div>
+
+    <div class="box" style="left:320px;top:552px;width:500px;height:142px">
+      <h3>노드 수 비교</h3>
+      <table style="margin-top:8px">
+        <tr><th>구성</th><th>과반수</th><th>장애 허용</th><th>판단</th></tr>
+        <tr><td>1 node</td><td>1</td><td>0개</td><td>단일 장애점. 운영 quorum 목적에 맞지 않음</td></tr>
+        <tr><td>2 nodes</td><td>2</td><td>실질 0개</td><td>1개가 죽으면 과반수 없음. 비용 대비 HA 이점이 작음</td></tr>
+        <tr><td><strong>3 nodes</strong></td><td><strong>2</strong></td><td><strong>1개</strong></td><td><strong>운영 HA의 실용적 최소 구성. 리움 Production 기준</strong></td></tr>
+        <tr><td>5 nodes</td><td>3</td><td>2개</td><td>더 강하지만 비용, 저장소, 복제 지연 증가</td></tr>
+      </table>
+    </div>
+
+    <div class="note">
+      <b>정리:</b> RabbitMQ Quorum ×3는 RabbitMQ를 세 번 중복 표기한 것이 아니라, Production 메시지 큐를 3개 RabbitMQ Pod/Node에 복제해 운영 안정성을 확보한다는 뜻입니다.
+      리움에서는 문서 처리, OCR, RAG 적재, 리포트 작업이 한 번에 몰릴 수 있으므로 API와 Worker 사이에 durable queue, consumer ack, retry with backoff, DLQ를 둡니다.
+      3개는 1개 장애를 견디는 최소 운영형 quorum 구성이며, 더 큰 5개 구성은 실제 queue depth와 장애 요구가 커졌을 때 검토하면 됩니다.
+    </div>
+  </div>
+</div>
+</body>
+</html>

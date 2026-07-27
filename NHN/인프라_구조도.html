@@ -1,0 +1,411 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>리움 인프라 구조도 (NHN Cloud 기준)</title>
+<style>
+  :root{
+    --ink:#0f172a; --muted:#64748b;
+    --vpc:#1d4ed8; --pub:#059669; --app:#2563eb; --db:#ea580c;
+    --mng:#7c3aed; --ext:#0891b2; --adm:#15803d; --red:#9333ea;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:22px;background:#fff;color:#0f172a;
+    font-family:"Pretendard","Malgun Gothic",-apple-system,"Segoe UI",sans-serif}
+  .canvas{position:relative;width:1860px;height:1080px;margin:0 auto}
+  h1{position:absolute;left:0;top:-2px;margin:0;font-size:28px;letter-spacing:-.7px}
+
+  .zone{position:absolute;border-radius:12px;z-index:1}
+  .zt{position:absolute;left:14px;top:9px;font-size:12px;font-weight:800;z-index:4}
+
+  .b{position:absolute;z-index:3;background:#fff;border:1.6px solid #cbd5e1;border-radius:9px;
+     box-shadow:0 2px 5px rgba(15,23,42,.10);display:flex;align-items:center;gap:9px;padding:7px 10px}
+  .tx{flex:1}
+  .t{font-size:12px;font-weight:700;line-height:1.3}
+  .s{font-size:10px;color:#475569;line-height:1.35;margin-top:2px}
+  .ctr{flex-direction:column;justify-content:center;text-align:center;gap:5px}
+  .ctr .tx{flex:none}
+  .ic{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;
+      stroke-linecap:round;stroke-linejoin:round}
+  .s18{width:18px;height:18px}
+  .tag{display:inline-block;font-size:9px;font-weight:800;color:#fff;background:#475569;
+       border-radius:4px;padding:0 5px;margin-left:4px;vertical-align:1px}
+
+  svg.wires{position:absolute;left:0;top:0;z-index:2;pointer-events:none}
+  .wl{font-size:10px;fill:#475569;font-weight:700}
+  .wlb{font-size:10px;fill:#2563eb;font-weight:700}
+  .wlp{font-size:10px;fill:#7c3aed;font-weight:700}
+
+  .panel{position:absolute;z-index:3;border:1.6px solid #cbd5e1;border-radius:10px;overflow:hidden;background:#fff}
+  .ph{background:#1d4ed8;color:#fff;font-weight:700;font-size:11.5px;padding:6px 11px}
+  .pb{padding:8px 11px;font-size:11px}
+  .pb ul{margin:0;padding-left:15px}
+  .pb li{margin:3.5px 0}
+  table{width:100%;border-collapse:collapse;font-size:10.5px}
+  th,td{border:1px solid #e2e8f0;padding:4px 6px;text-align:left;vertical-align:top}
+  th{background:#f1f5f9;font-weight:700}
+  .sg{font-weight:800;color:#334155;white-space:nowrap}
+  .sg-help{padding:7px 9px;border-bottom:1px solid #e2e8f0;background:#f8fafc;
+           color:#475569;font-size:9.8px;line-height:1.34}
+  .sg-table{font-size:9.6px}
+  .sg-table th,.sg-table td{padding:3.5px 5px}
+  .sg-table .sg{font-size:9.8px}
+  .sg-main{font-weight:800;color:#0f172a;line-height:1.18}
+  .sg-desc{margin-top:2px;color:#64748b;font-size:9px;line-height:1.22}
+  .lg{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:10.5px}
+  .sw{width:34px;border-top-width:2.5px;flex:none}
+
+  /* --- 클릭 가능한 '단어' 링크 · 모달(iframe) --- */
+  .wlink{cursor:pointer;color:#2563eb;font-weight:800;text-decoration:underline;
+         text-decoration-style:dashed;text-underline-offset:3px;text-decoration-thickness:1.5px}
+  .wlink:hover{color:#1d4ed8;background:#dbeafe;border-radius:4px;
+               text-decoration-style:solid;box-shadow:0 0 0 2px #dbeafe}
+  #ovl{position:fixed;inset:0;z-index:1000;display:none;background:rgba(15,23,42,.55)}
+  #ovl.on{display:flex;align-items:center;justify-content:center}
+  #ovlCard{width:min(1240px,94vw);height:90vh;background:#fff;border-radius:14px;overflow:hidden;
+           box-shadow:0 24px 70px rgba(0,0,0,.4);display:flex;flex-direction:column}
+  #ovlHead{display:flex;align-items:center;justify-content:space-between;padding:11px 18px;background:#1d4ed8;color:#fff}
+  #ovlHead b{font-size:14px}
+  #ovlHead button{background:rgba(255,255,255,.22);color:#fff;border:none;border-radius:8px;padding:6px 14px;
+                  font-size:13px;font-weight:700;cursor:pointer}
+  #ovlHead button:hover{background:rgba(255,255,255,.35)}
+  #ovlFrame{flex:1;border:none;width:100%}
+</style>
+</head>
+<body>
+<div class="canvas">
+  <h1>리움 인프라 구조도 (NHN Cloud 기준)</h1>
+
+  <svg class="wires" width="1860" height="1080">
+    <defs>
+      <marker id="aK" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#334155" fill-opacity=".65"></path></marker>
+      <marker id="aB" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#2563eb"></path></marker>
+      <marker id="aP" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#7c3aed"></path></marker>
+      <marker id="aG" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#15803d"></path></marker>
+    </defs>
+    <g fill="none" stroke="#334155" stroke-width="1.9" marker-end="url(#aK)" opacity=".65">
+      <!-- 인터넷 → DNS/DDoS -->
+      <path d="M148,228 L170,226"></path>
+      <!-- DNS/DDoS → WAF(A) -->
+      <path d="M320,226 L342,226"></path>
+      <!-- DNS/DDoS → WAF(B) -->
+      <path d="M320,226 L320,168 L948,168 L948,190"></path>
+      <!-- WAF(A) → ALB -->
+      <path d="M434,262 L560,276"></path>
+      <!-- WAF(B) → ALB -->
+      <path d="M948,262 L880,276"></path>
+      <!-- ALB → API Gateway -->
+      <path d="M710,344 L710,350"></path>
+      <!-- API Gateway → API Node(A) -->
+      <path d="M600,373 L439,373 L439,448"></path>
+      <!-- API Gateway → API Node(B) -->
+      <path d="M820,373 L981,373 L981,448"></path>
+      <!-- API Node(A) → RabbitMQ -->
+      <path d="M576,478 L634,470"></path>
+      <!-- API Node(B) → RabbitMQ -->
+      <path d="M844,478 L786,470"></path>
+      <!-- API Node(A) → Worker(A) -->
+      <path d="M439,532 L439,546"></path>
+      <!-- API Node(B) → Worker(B) -->
+      <path d="M981,532 L981,546"></path>
+      <!-- Worker(A) → RabbitMQ -->
+      <path d="M576,562 L634,490"></path>
+      <!-- Worker(B) → RabbitMQ -->
+      <path d="M844,562 L786,490"></path>
+      <!-- Worker(A) → Private AI Internal LB -->
+      <path d="M576,616 L622,607"></path>
+      <!-- Worker(B) → Private AI Internal LB -->
+      <path d="M844,616 L798,607"></path>
+      <!-- Private AI Internal LB → LLM Replica -->
+      <path d="M710,622 L710,634"></path>
+      <!-- Worker(A) → DB Primary -->
+      <path d="M439,630 L439,740"></path>
+      <!-- Worker(B) → Read Replica (heavy read) -->
+      <path d="M981,630 L981,866 L890,866 L890,896"></path>
+      <!-- DB Primary → Standby (동기 복제 + 자동 Failover) -->
+      <path d="M746,780 L804,780"></path>
+      <!-- DB Primary → Read Replica (비동기 복제) -->
+      <path d="M600,832 L600,866 L660,866 L660,896"></path>
+    </g>
+    <g fill="none" stroke="#2563eb" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#aB)">
+      <!-- Worker(A) 아웃바운드 → NAT Gateway(Prod) -->
+      <path d="M302,588 L255,588 L255,398 L700,398 L700,248"></path>
+      <!-- Worker(B) 아웃바운드 → NAT Gateway(Prod) -->
+      <path d="M1118,588 L1165,588 L1165,398 L760,398 L760,248"></path>
+      <!-- NAT Gateway(Prod) → 외부 서비스 -->
+      <path d="M820,219 L1200,219"></path>
+    </g>
+    <g fill="none" stroke="#7c3aed" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#aP)">
+      <!-- Worker(A) → Service Gateway (Object Storage 사설 접근) -->
+      <path d="M302,600 L370,600 L370,1000 L470,1000"></path>
+      <!-- Worker(B) → Service Gateway -->
+      <path d="M1136,600 L1162,600 L1162,984 L930,984"></path>
+      <!-- Service Gateway → Object Storage -->
+      <path d="M930,1018 L1060,1018 L1060,858 L1200,858"></path>
+    </g>
+    <g fill="none" stroke="#15803d" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#aG)">
+      <path d="M80,762 L80,776"></path>
+      <path d="M148,806 L198,806"></path>
+      <path d="M271,760 L271,480 L302,480"></path>
+      <path d="M344,800 L404,786"></path>
+    </g>
+    <text class="wl" x="490" y="270">80/443</text>
+    <text class="wl" x="712" y="366">8080 ← API Gateway</text>
+    <text class="wl" x="446" y="700">5432</text>
+    <text class="wl" x="910" y="855">read</text>
+    <text class="wlb" x="480" y="390">App/Worker → Prod Egress NAT</text>
+    <text class="wlb" x="970" y="210">NAT 경유 → 외부 API</text>
+    <text class="wlp" x="952" y="1009">Service Gateway 사설 연결</text>
+  </svg>
+
+  <div class="zone" style="left:170px;top:96px;width:1010px;height:940px;border:2.4px solid #1d4ed8;background:#f8fafc"><div class="zt" style="color:#1d4ed8">NHN Cloud VPC · Production (Dev/Val는 별도 클러스터)</div></div>
+  <div class="zone" style="left:330px;top:146px;width:300px;height:230px;border:1.8px solid #059669;background:#ecfdf5"><div class="zt" style="color:#059669">1. Web Tier · Public Subnet (AZ-A)</div></div>
+  <div class="zone" style="left:840px;top:146px;width:350px;height:230px;border:1.8px solid #059669;background:#ecfdf5"><div class="zt" style="color:#059669">1. Web Tier · Public Subnet (AZ-B)</div></div>
+  <div class="zone" style="left:290px;top:404px;width:310px;height:262px;border:1.8px solid #2563eb;background:#eff6ff"><div class="zt" style="color:#2563eb">2. App Tier · <span class="wlink" onclick="openModal('../common/리움_K8s_개념도.html','리움 Kubernetes(NKS) 개념도')">NKS 클러스터</span> (AZ-A)</div></div>
+  <div class="zone" style="left:820px;top:404px;width:310px;height:262px;border:1.8px solid #2563eb;background:#eff6ff"><div class="zt" style="color:#2563eb">2. App Tier · <span class="wlink" onclick="openModal('../common/리움_K8s_개념도.html','리움 Kubernetes(NKS) 개념도')">NKS 클러스터</span> (AZ-B)</div></div>
+  <div class="zone" style="left:620px;top:424px;width:180px;height:82px;border:1.8px solid #9333ea;background:#faf5ff"><div class="zt" style="color:#9333ea">메시지 큐 · RabbitMQ</div></div>
+  <div class="zone" style="left:602px;top:548px;width:216px;height:146px;border:1.8px solid #7c3aed;background:#f5f3ff"><div class="zt" style="color:#7c3aed">Private AI · GPU</div></div>
+  <div class="zone" style="left:186px;top:700px;width:170px;height:220px;border:1.8px solid #059669;background:#ecfdf5"><div class="zt" style="color:#059669">관리자 접근 · 접속통제</div></div>
+  <div class="zone" style="left:390px;top:700px;width:370px;height:146px;border:1.8px solid #ea580c;background:#fff7ed"><div class="zt" style="color:#ea580c">3. Data Tier · DB Subnet (AZ-A)</div></div>
+  <div class="zone" style="left:790px;top:700px;width:360px;height:146px;border:1.8px solid #ea580c;background:#fff7ed"><div class="zt" style="color:#ea580c">3. Data Tier · DB Subnet (AZ-B)</div></div>
+  <div class="zone" style="left:520px;top:868px;width:480px;height:92px;border:1.8px dashed #ea580c;background:#fff7ed"><div class="zt" style="color:#ea580c">DB Read 계층 · 읽기 분산 (AZ 독립)</div></div>
+  <div class="zone" style="left:1200px;top:146px;width:250px;height:178px;border:1.8px solid #0891b2;background:#ecfeff"><div class="zt" style="color:#0891b2">외부 서비스 (인터넷)</div></div>
+  <div class="b" style="left:1200px;top:336px;width:250px;height:82px;border-color:#2563eb;background:#f5f9ff">
+    <svg class="ic" viewBox="0 0 24 24" style="color:#2563eb"><rect x="3" y="4" width="18" height="7" rx="1.6"></rect><rect x="3" y="13" width="18" height="7" rx="1.6"></rect><path d="M6.6 7.4h.01M6.6 16.4h.01"></path></svg>
+    <div class="tx"><div class="t" style="font-size:10.5px"><span class="wlink" onclick="openModal('../common/리움_비Production_환경_개념도.html','비Production 환경 설명')">비Production 환경</span> (별도 NKS 클러스터)</div><div class="s" style="font-size:9px">Validation: App+Worker 4/8 ×2 · 단일 DB<br>Development: 2/4 ×2 · 단일 DB</div></div>
+  </div>
+
+  <div class="zone" style="left:1200px;top:430px;width:250px;height:296px;border:1.8px dashed #7c3aed;background:#faf5ff"><div class="zt" style="color:#7c3aed">관리형 서비스 (VPC 외부)</div></div>
+
+  <div class="b ctr" style="left:14px;top:180px;width:134px;height:96px;border-color:#334155">
+    <svg class="ic" viewBox="0 0 24 24" style="color:#334155"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3c3 3.6 3 14.4 0 18M12 3c-3 3.6-3 14.4 0 18"></path></svg>
+    <div class="tx"><div class="t">인터넷</div><div class="s">사용자 / 기업 담당자</div></div>
+  </div>
+
+  <div class="b ctr" style="left:14px;top:692px;width:134px;height:70px;border-color:#15803d">
+    <svg class="ic" viewBox="0 0 24 24" style="color:#15803d"><circle cx="12" cy="7.8" r="3.6"></circle><path d="M4.6 20.2a7.4 7.4 0 0 1 14.8 0"></path></svg>
+    <div class="tx"><div class="t">관리자 / 운영자</div></div>
+  </div>
+
+  <div class="b ctr" style="left:14px;top:776px;width:134px;height:66px;border-color:#15803d;background:#f0fdf4">
+    <svg class="ic" viewBox="0 0 24 24" style="color:#15803d"><rect x="4.8" y="10.2" width="14.4" height="10" rx="2.2"></rect><path d="M8.2 10.2V7.4a3.8 3.8 0 0 1 7.6 0v2.8"></path></svg>
+    <div class="tx"><div class="t" style="font-size:11px">VPN / 전용선</div><div class="s">공공기관 내부망</div></div>
+  </div>
+
+  <div class="b" style="left:170px;top:198px;width:150px;height:56px;padding:6px 10px;border-color:#1d4ed8">
+    <svg class="ic s18" viewBox="0 0 24 24" style="color:#1d4ed8"><path d="M12 3l7.5 3v6.2c0 4.2-3.2 7.9-7.5 9.3-4.3-1.4-7.5-5.1-7.5-9.3V6z"></path><path d="M8.8 12.2l2.3 2.3 4.1-4.4"></path></svg>
+    <div class="tx"><div class="t" style="font-size:12px">DNS · DDoS Guard</div><div class="s">엣지 보안 (WAF 앞단)</div></div>
+  </div>
+
+  <div class="b" style="left:342px;top:190px;width:184px;height:72px">
+    <svg class="ic" viewBox="0 0 24 24" style="color:#059669"><path d="M12 3l7.5 3v6.2c0 4.2-3.2 7.9-7.5 9.3-4.3-1.4-7.5-5.1-7.5-9.3V6z"></path></svg>
+    <div class="tx"><div class="t">WAF (Managed)<span class="tag">SG-WAF</span></div><div class="s">WAPPLES 300Mbps · Managed HA</div></div>
+  </div>
+
+  <div class="b" style="left:640px;top:190px;width:180px;height:58px;border-color:#2563eb;background:#f8fbff">
+    <svg class="ic" viewBox="0 0 24 24" style="color:#059669"><path d="M3.5 8.8h13.2l-3.4-3.4M20.5 15.2H7.3l3.4 3.4"></path></svg>
+    <div class="tx"><div class="t"><span class="wlink" onclick="openModal('../common/리움_Prod_Egress_NAT_개념도.html','Prod Egress NAT 적용 이유')">Prod Egress NAT</span></div><div class="s">Production outbound<br>환경별 NAT ×3 중 1식</div></div>
+  </div>
+
+  <div class="b" style="left:856px;top:190px;width:184px;height:72px">
+    <svg class="ic" viewBox="0 0 24 24" style="color:#059669"><path d="M12 3l7.5 3v6.2c0 4.2-3.2 7.9-7.5 9.3-4.3-1.4-7.5-5.1-7.5-9.3V6z"></path></svg>
+    <div class="tx"><div class="t">WAF (Managed)<span class="tag">SG-WAF</span></div><div class="s">WAPPLES 300Mbps · Managed HA</div></div>
+  </div>
+
+  <div class="b" style="left:380px;top:276px;width:680px;height:68px;border-color:#2563eb;border-width:2px;background:#f5f9ff;justify-content:center">
+    <svg class="ic" viewBox="0 0 24 24" style="color:#2563eb"><circle cx="12" cy="4.6" r="2.3"></circle><circle cx="4.8" cy="19.4" r="2.3"></circle><circle cx="12" cy="19.4" r="2.3"></circle><circle cx="19.2" cy="19.4" r="2.3"></circle><path d="M12 6.9v4.3M4.8 17.1v-2.4h14.4v2.4M12 11.2v5.9"></path></svg>
+    <div class="tx" style="flex:none;text-align:center">
+      <div class="t" style="color:#2563eb;font-size:13px"><span class="wlink" onclick="openModal('../common/리움_단일_ALB_개념도.html','단일 ALB 적용 이유')">단일 ALB</span> (Multi-AZ 배치)<span class="tag" style="background:#2563eb">SG-ALB</span></div>
+      <div class="s">Application Load Balancer · 1식 · Public Subnet (AZ-A / AZ-B)</div>
+    </div>
+  </div>
+
+  <div class="b" style="left:600px;top:350px;width:220px;height:46px;padding:5px 11px">
+    <svg class="ic" viewBox="0 0 24 24" style="color:#2563eb"><rect x="3" y="7" width="18" height="10" rx="2"></rect><path d="M7 12h10M7 9.6h.01M7 14.4h.01"></path></svg>
+    <div class="tx"><div class="t" style="font-size:12px"><span class="wlink" onclick="openModal('../common/리움_API_Gateway_Standard_개념도.html','API Gateway Standard 설명')">API Gateway (Standard)</span></div><div class="s">인증 · Rate Limit · API 관리</div></div>
+  </div>
+
+  <div class="b" style="left:302px;top:448px;width:274px;height:84px">
+    <svg class="ic" viewBox="0 0 24 24" style="color:#2563eb"><rect x="3.2" y="4" width="17.6" height="6.4" rx="1.6"></rect><rect x="3.2" y="13.6" width="17.6" height="6.4" rx="1.6"></rect><path d="M6.8 7.2h.01M6.8 16.8h.01"></path></svg>
+    <div class="tx"><div class="t">API Node (AZ-A)<span class="tag">SG-API</span></div><div class="s"><span class="wlink" onclick="openModal('리움_NHN_인스턴스_타입_개념도.html','NHN Cloud 인스턴스 타입')">m2.c4m8</span> · NKS Worker Node<br>API Pod · HPA (p95/CPU)</div></div>
+  </div>
+
+  <div class="b" style="left:302px;top:546px;width:274px;height:84px">
+    <svg class="ic" viewBox="0 0 24 24" style="color:#2563eb"><rect x="3" y="4.5" width="18" height="15" rx="2"></rect><path d="M7 10l3 2.6-3 2.6M12.6 15.6h4.4"></path></svg>
+    <div class="tx"><div class="t"><span class="wlink" onclick="openModal('../common/리움_Worker_Node_개념도.html','Worker Node 설명')">Worker Node (AZ-A)</span><span class="tag">SG-Worker</span></div><div class="s"><span class="wlink" onclick="openModal('리움_NHN_인스턴스_타입_개념도.html','NHN Cloud 인스턴스 타입')">m2.c4m8</span> · NKS Worker Node<br>Worker Pod(KEDA) · PaddleOCR·ETL·RAG</div></div>
+  </div>
+
+  <div class="b" style="left:844px;top:448px;width:274px;height:84px">
+    <svg class="ic" viewBox="0 0 24 24" style="color:#2563eb"><rect x="3.2" y="4" width="17.6" height="6.4" rx="1.6"></rect><rect x="3.2" y="13.6" width="17.6" height="6.4" rx="1.6"></rect><path d="M6.8 7.2h.01M6.8 16.8h.01"></path></svg>
+    <div class="tx"><div class="t">API Node (AZ-B)<span class="tag">SG-API</span></div><div class="s"><span class="wlink" onclick="openModal('리움_NHN_인스턴스_타입_개념도.html','NHN Cloud 인스턴스 타입')">m2.c4m8</span> · NKS Worker Node<br>API Pod · HPA (p95/CPU)</div></div>
+  </div>
+
+  <div class="b" style="left:844px;top:546px;width:274px;height:84px">
+    <svg class="ic" viewBox="0 0 24 24" style="color:#2563eb"><rect x="3" y="4.5" width="18" height="15" rx="2"></rect><path d="M7 10l3 2.6-3 2.6M12.6 15.6h4.4"></path></svg>
+    <div class="tx"><div class="t"><span class="wlink" onclick="openModal('../common/리움_Worker_Node_개념도.html','Worker Node 설명')">Worker Node (AZ-B)</span><span class="tag">SG-Worker</span></div><div class="s"><span class="wlink" onclick="openModal('리움_NHN_인스턴스_타입_개념도.html','NHN Cloud 인스턴스 타입')">m2.c4m8</span> · NKS Worker Node<br>Worker Pod(KEDA) · PaddleOCR·ETL·RAG</div></div>
+  </div>
+
+  <div class="b ctr" style="left:634px;top:452px;width:152px;height:46px;gap:3px">
+    <svg class="ic s18" viewBox="0 0 24 24" style="color:#7c3aed"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M8 5v14M13 5v14"></path></svg>
+    <div class="tx"><div class="t" style="font-size:11px"><span class="wlink" onclick="openModal('../common/리움_RabbitMQ_Quorum_개념도.html','RabbitMQ Quorum 설명')">RabbitMQ Quorum</span> ×3<span class="tag" style="background:#7c3aed">SG-MQ</span></div></div>
+  </div>
+
+  <div class="b" style="left:622px;top:578px;width:176px;height:44px;padding:6px 10px;gap:8px">
+    <svg class="ic s18" viewBox="0 0 24 24" style="color:#7c3aed"><circle cx="12" cy="4.6" r="2.3"></circle><circle cx="4.8" cy="19.4" r="2.3"></circle><circle cx="12" cy="19.4" r="2.3"></circle><circle cx="19.2" cy="19.4" r="2.3"></circle><path d="M12 6.9v4.3M4.8 17.1v-2.4h14.4v2.4M12 11.2v5.9"></path></svg>
+    <div class="tx"><div class="t" style="font-size:10.5px">Private AI LB<span class="tag" style="background:#7c3aed">SG-AI</span></div></div>
+  </div>
+
+  <div class="b" style="left:622px;top:634px;width:176px;height:54px;padding:6px 10px;gap:8px">
+    <svg class="ic s18" viewBox="0 0 24 24" style="color:#7c3aed"><rect x="4" y="4" width="16" height="16" rx="2"></rect><path d="M8 8h8v8H8zM4 9h2M4 13h2M18 9h2M18 13h2M9 4v2M13 4v2M9 18v2M13 18v2"></path></svg>
+    <div class="tx"><div class="t" style="font-size:10.5px"><span class="wlink" onclick="openModal('../common/리움_자체호스팅_LLM_개념도.html','자체호스팅 LLM 설명')">자체호스팅 LLM</span></div><div class="s" style="font-size:9px;line-height:1.18">T4 ×2 Replica<br>Qwen3-8B-AWQ + vLLM</div></div>
+  </div>
+
+  <div class="b" style="left:198px;top:760px;width:146px;height:120px;border-color:#15803d">
+    <svg class="ic" viewBox="0 0 24 24" style="color:#15803d"><rect x="4.8" y="10.2" width="14.4" height="10" rx="2.2"></rect><path d="M8.2 10.2V7.4a3.8 3.8 0 0 1 7.6 0v2.8"></path></svg>
+    <div class="tx"><div class="t" style="font-size:11px">NHN Bastion<span class="tag" style="background:#15803d">SG-Bastion</span></div><div class="s">관리형 접속통제<br>Web Terminal · 접속이력</div></div>
+  </div>
+
+  <div class="b" style="left:404px;top:740px;width:342px;height:92px">
+    <svg class="ic" viewBox="0 0 24 24" style="color:#ea580c"><ellipse cx="12" cy="5.8" rx="7.8" ry="2.9"></ellipse><path d="M4.2 5.8v12.4c0 1.6 3.5 2.9 7.8 2.9s7.8-1.3 7.8-2.9V5.8"></path><path d="M4.2 12c0 1.6 3.5 2.9 7.8 2.9s7.8-1.3 7.8-2.9"></path></svg>
+    <div class="tx"><div class="t">RDS for PostgreSQL — Primary (AZ-A)<span class="tag" style="background:#ea580c">SG-DB</span></div><div class="s">관리형 PostgreSQL · 4vCPU/16GB · 500GB 계획<br><b style="color:#0f172a">PostGIS + pgvector</b> · write/read</div></div>
+  </div>
+
+  <div class="b" style="left:580px;top:896px;width:380px;height:54px;padding:6px 12px">
+    <svg class="ic s18" viewBox="0 0 24 24" style="color:#ea580c"><ellipse cx="12" cy="5.8" rx="7.8" ry="2.9"></ellipse><path d="M4.2 5.8v12.4c0 1.6 3.5 2.9 7.8 2.9s7.8-1.3 7.8-2.9V5.8"></path></svg>
+    <div class="tx"><div class="t" style="font-size:11px">RDS Read Replica ×1 (Prod)<span class="tag" style="background:#ea580c">SG-DB</span></div><div class="s">4vCPU/16GB · 500GB 계획<br>대시보드·리포트·RAG read 분산</div></div>
+  </div>
+
+  <div class="b" style="left:804px;top:740px;width:332px;height:92px">
+    <svg class="ic" viewBox="0 0 24 24" style="color:#ea580c"><ellipse cx="12" cy="5.8" rx="7.8" ry="2.9"></ellipse><path d="M4.2 5.8v12.4c0 1.6 3.5 2.9 7.8 2.9s7.8-1.3 7.8-2.9V5.8"></path><path d="M4.2 12c0 1.6 3.5 2.9 7.8 2.9s7.8-1.3 7.8-2.9"></path></svg>
+    <div class="tx"><div class="t">RDS for PostgreSQL — Standby (AZ-B)<span class="tag" style="background:#ea580c">SG-DB</span></div><div class="s">4vCPU/16GB · 500GB 계획<br><b style="color:#0f172a">Failover 전용 · 평상시 분석부하 없음</b></div></div>
+  </div>
+
+  <div class="b" style="left:470px;top:970px;width:460px;height:58px;border-color:#7c3aed;border-width:2px;background:#faf5ff;justify-content:center">
+    <svg class="ic" viewBox="0 0 24 24" style="color:#7c3aed"><circle cx="12" cy="12" r="7.6"></circle><circle cx="12" cy="12" r="2.4"></circle><path d="M12 4.4v2.4M12 17.2v2.4M4.4 12h2.4M17.2 12h2.4"></path></svg>
+    <div class="tx" style="flex:none;text-align:center"><div class="t" style="color:#7c3aed"><span class="wlink" onclick="openModal('리움_Service_Gateway_Object_Storage_개념도.html','Service Gateway Object Storage 사설 연결')">Service Gateway — Object Storage</span> 사설 연결</div><div class="s">문서 원본이 인터넷 구간을 경유하지 않음</div></div>
+  </div>
+
+  <div class="b" style="left:1214px;top:190px;width:222px;height:40px;padding:5px 9px">
+    <svg class="ic s18" viewBox="0 0 24 24" style="color:#0891b2"><path d="M12 21.2s6.8-6.4 6.8-11a6.8 6.8 0 1 0-13.6 0c0 4.6 6.8 11 6.8 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>
+    <div class="tx"><div class="t" style="font-size:11px">지오코딩 / Routing API</div></div>
+  </div>
+  <div class="b" style="left:1214px;top:250px;width:222px;height:40px;padding:5px 9px">
+    <svg class="ic s18" viewBox="0 0 24 24" style="color:#0891b2"><rect x="3.4" y="3.4" width="7.2" height="7.2" rx="1.2"></rect><rect x="13.4" y="3.4" width="7.2" height="7.2" rx="1.2"></rect><rect x="3.4" y="13.4" width="7.2" height="7.2" rx="1.2"></rect><rect x="13.4" y="13.4" width="7.2" height="7.2" rx="1.2"></rect></svg>
+    <div class="tx"><div class="t" style="font-size:11px">공공데이터 / 외부 API</div></div>
+  </div>
+
+  <div class="b" style="left:1214px;top:472px;width:222px;height:52px;padding:6px 9px">
+    <svg class="ic" viewBox="0 0 24 24" style="color:#7c3aed"><path d="M20.6 12a8.6 8.6 0 1 1-2.9-6.4"></path><path d="M20.6 3.6v5h-5"></path></svg>
+    <div class="tx"><div class="t" style="font-size:11px">Backup / Snapshot</div><div class="s">DB 백업 · 스냅숏</div></div>
+  </div>
+  <div class="b" style="left:1214px;top:534px;width:222px;height:52px;padding:6px 9px">
+    <svg class="ic" viewBox="0 0 24 24" style="color:#7c3aed"><rect x="3" y="4.2" width="18" height="12" rx="2"></rect><path d="M9 20.2h6M12 16.2v4"></path></svg>
+    <div class="tx"><div class="t" style="font-size:11px">Cloud Monitoring</div><div class="s">메트릭 · 알림</div></div>
+  </div>
+  <div class="b" style="left:1214px;top:596px;width:222px;height:52px;padding:6px 9px">
+    <svg class="ic" viewBox="0 0 24 24" style="color:#7c3aed"><circle cx="10.8" cy="10.8" r="6.4"></circle><path d="M15.6 15.6l5 5"></path></svg>
+    <div class="tx"><div class="t" style="font-size:11px">Log &amp; Audit</div><div class="s">접속로그 · 감사로그</div></div>
+  </div>
+  <div class="b" style="left:1214px;top:658px;width:222px;height:52px;padding:6px 9px">
+    <svg class="ic" viewBox="0 0 24 24" style="color:#7c3aed"><path d="M12 3l7.5 3v6.2c0 4.2-3.2 7.9-7.5 9.3-4.3-1.4-7.5-5.1-7.5-9.3V6z"></path><path d="M8.8 12.2l2.3 2.3 4.1-4.4"></path></svg>
+    <div class="tx"><div class="t" style="font-size:11px">Security Monitoring</div><div class="s">위협 탐지 · 분석</div></div>
+  </div>
+
+  <div class="b" style="left:1200px;top:790px;width:250px;height:86px;border-color:#7c3aed;border-width:2px">
+    <svg class="ic" viewBox="0 0 24 24" style="color:#7c3aed"><ellipse cx="12" cy="6" rx="7.8" ry="2.6"></ellipse><path d="M4.2 6.2l1.5 13a2.1 2.1 0 0 0 2.1 1.8h8.4a2.1 2.1 0 0 0 2.1-1.8l1.5-13"></path></svg>
+    <div class="tx"><div class="t" style="color:#7c3aed">Object Storage</div><div class="s">문서·OCR·리포트·WORM/로그 · <b>총 계획 2.54TB</b><br>문서 1.39TB/년 (3년 4.2TB)</div></div>
+  </div>
+
+  <div class="panel" style="left:1460px;top:-2px;width:400px">
+    <div class="ph">범례</div>
+    <div class="pb">
+      <div class="lg"><span class="sw" style="border-top:2.5px solid #334155"></span> 주요 트래픽 흐름</div>
+      <div class="lg"><span class="sw" style="border-top:2.5px dashed #2563eb"></span> 아웃바운드 (NAT 경유)</div>
+      <div class="lg"><span class="sw" style="border-top:2.5px dashed #7c3aed"></span> 사설 연결 (Service Gateway)</div>
+      <div class="lg"><span class="sw" style="border-top:2.5px dashed #15803d"></span> 관리자 접근 경로</div>
+      <div class="lg"><span class="tag" style="margin:0">SG-XXX</span> Security Group</div>
+      <div class="lg"><span class="wlink" style="cursor:default">밑줄 친 용어</span> 클릭 → 개념도 열림</div>
+    </div>
+  </div>
+
+  <div class="panel" style="left:1460px;top:186px;width:400px">
+    <div class="ph">기준 가정</div>
+    <div class="pb"><ul>
+      <li>서비스 대상 <b>약 6,200 org</b> <span style="color:#64748b">(고유 기업 6,212, 중복 제거)</span></li>
+      <li>동시 활성 <b>약 310명</b> (대상의 5%, 기업당 1명)</li>
+      <li>기준 부하 <b>200 RPS</b> <span style="color:#64748b">(계산 155 + 안전여유 약 30%)</span></li>
+      <li>스트레스 400 RPS · Burst 600 RPS <span style="color:#64748b">(600은 시험 상한값)</span></li>
+      <li>OCR <b>약 1,900문서/일</b> · LLM <b>~30.72M tok/월</b> (동시추론 4/16)</li>
+      <li>상시 CPU Node <b>12대</b> (3환경) — Prod: API3·Worker2(4/8)·MQ3 / Val2 / Dev2</li>
+      <li>NAT Gateway <b>×3</b> — Prod/Val/Dev 환경별 egress 기준</li>
+      <li>권고 인프라 <b>약 772만원/월</b>(NHN) · <b>755만원</b>(NAVER) <span style="color:#64748b">VAT별도 · Dev/Val/Prod 포함</span></li>
+    </ul></div>
+  </div>
+
+  <div class="panel" style="left:1460px;top:418px;width:400px">
+    <div class="ph">보안 그룹 (Security Group) 규칙</div>
+    <div class="pb" style="padding:0">
+      <div class="sg-help"><b>읽는 법:</b> <b>A ← B</b>는 “B에서 A로 들어오는 요청만 허용”한다는 뜻입니다. SG는 각 서버/서비스 앞의 출입문 방화벽입니다.</div>
+      <table class="sg-table">
+        <tr><th style="width:88px">SG</th><th>허용 인바운드와 의미</th></tr>
+        <tr><td class="sg">SG-WAF</td><td><div class="sg-main">80, 443 ← DNS/DDoS Guard</div><div class="sg-desc">사용자 웹 요청이 DDoS 보호를 지난 뒤 WAF에 도착합니다.</div></td></tr>
+        <tr><td class="sg">SG-ALB</td><td><div class="sg-main">80, 443 ← SG-WAF</div><div class="sg-desc">WAF가 통과시킨 HTTP/HTTPS 요청만 ALB로 전달됩니다.</div></td></tr>
+        <tr><td class="sg">SG-API</td><td><div class="sg-main">8080 ← API Gateway / SG-ALB</div><div class="sg-desc">API Pod는 공개 인터넷이 아니라 Gateway/ALB 내부 호출만 받습니다.</div></td></tr>
+        <tr><td class="sg">SG-Worker</td><td><div class="sg-main">인바운드 없음</div><div class="sg-desc">외부가 Worker를 직접 호출하지 않고, Worker가 큐·DB·AI·Storage로 나갑니다.</div></td></tr>
+        <tr><td class="sg">SG-AI</td><td><div class="sg-main">8000/443 ← SG-Worker</div><div class="sg-desc">Worker만 사설 LLM 엔드포인트를 호출합니다. 외부 LLM API가 아닙니다.</div></td></tr>
+        <tr><td class="sg">SG-MQ</td><td><div class="sg-main">5672 ← SG-API, SG-Worker</div><div class="sg-desc">API가 작업을 넣고 Worker가 꺼내 처리하는 RabbitMQ 통로입니다.</div></td></tr>
+        <tr><td class="sg">SG-DB</td><td><div class="sg-main">5432 ← SG-API, SG-Worker, <b>SG-Bastion</b></div><div class="sg-desc">서비스 Pod와 운영 세션만 PostgreSQL에 접근하고 인터넷은 차단합니다.</div></td></tr>
+        <tr><td class="sg">SG-Bastion</td><td><div class="sg-main">관리자 세션 ← VPN / 전용선</div><div class="sg-desc">관리자는 먼저 Bastion에 접속한 뒤 내부 DB·서버를 점검합니다.</div></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel" style="left:1460px;top:780px;width:400px">
+    <div class="ph">핵심 설계 포인트</div>
+    <div class="pb"><ul>
+      <li>3-Tier · Multi-AZ · <b>Dev/Val/Prod 3환경(클러스터 분리)</b></li>
+      <li><b>NKS(Kubernetes)</b> — Control Plane ×3(Dev/Val/Prod·CSP 관리) · API Pod HPA / Worker Pod KEDA · Cluster Autoscaler</li>
+      <li>DB Primary(AZ-A) → Standby(AZ-B) 동기 복제 + 자동 Failover</li>
+      <li><b>RabbitMQ quorum 3노드</b> — durable·ack·DLQ·retry·PV</li>
+      <li><b>Read Replica ×1(Prod) 포함</b> · Primary와 분리된 read 부하 처리 · 캐시(EasyCache)는 미도입(옵션)</li>
+      <li><b>Object Storage는 Service Gateway 사설 연결</b></li>
+      <li>DB 운영은 NHN Bastion 경유 — SG-DB에 SG-Bastion 필수</li>
+      <li><b>DB 관리형</b> — HA·Failover·백업·패치를 CSP가 담당</li>
+      <li><b>PostgreSQL 채택</b> — PostGIS(공간)+pgvector(RAG 벡터·키워드)를 DB 하나로</li>
+      <li><b>LLM 자체호스팅 — NHN T4 16GB ×2 독립 Replica</b> (Qwen3-8B-AWQ+vLLM) · 외부 LLM API 미사용(S등급 전송 배제)</li>
+      <li><b>GPU 상향: NHN T4→A100 / NAVER T4→L4→L40S→H100</b> · 임베딩·OCR은 CPU Worker 우선</li>
+      <li><b>PgBouncer는 K8s Pod</b>(별도 VM 없음) · Patroni·etcd 불필요</li>
+      <li><b>DR(타 리전 Warm Standby)은 기본 제외</b> — BIA 확정 후 추가</li>
+    </ul></div>
+  </div>
+
+  <div style="position:absolute;left:0;top:1052px;width:1440px;font-size:10.5px;color:#64748b">
+    수치 기준: 데이터팀 고유 기업 6,212개(공급 5,338 / 중간처리 1,223 / 수요 208 / 복수역할 540) · 2026-07-20 ·
+    상세 근거는 <b>리움(re:도움) 클라우드 인프라 권고안 및 상세 비용 산정 보고서</b>(2026-07-24) 기준. NHN/NAVER 공공기관용 요금·타입은 조회 시점에 따라 변동될 수 있음.
+    &nbsp;· <b>개정:</b> 통합 권고안 기준 — NHN <b>T4×2 독립 Replica</b> · <b>NKS 3환경(Dev/Val/Prod)</b> · Managed WAF 300Mbps · RabbitMQ quorum 3 · Read Replica(Prod) 반영.
+  </div>
+</div>
+<div id="ovl" onclick="if(event.target===this)closeOvl()">
+  <div id="ovlCard">
+    <div id="ovlHead"><b id="ovlTitle">상세</b><button onclick="closeOvl()">✕ 닫기 (Esc)</button></div>
+    <iframe id="ovlFrame" title="상세 개념도"></iframe>
+  </div>
+</div>
+<script>
+  function openModal(src, title){
+    var f = document.getElementById('ovlFrame');
+    f.src = src;
+    document.getElementById('ovlTitle').textContent = title || '상세';
+    document.getElementById('ovl').classList.add('on');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeOvl(){
+    document.getElementById('ovl').classList.remove('on');
+    document.getElementById('ovlFrame').src = '';
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeOvl(); });
+</script>
+</body>
+</html>
+

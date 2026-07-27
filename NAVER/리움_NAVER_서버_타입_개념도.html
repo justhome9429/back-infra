@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>NAVER Cloud 서버 타입 설명</title>
+<style>
+  :root{--ink:#0f172a;--muted:#64748b;--line:#475569;--blue:#2563eb;--green:#059669;--purple:#7c3aed;--orange:#ea580c}
+  *{box-sizing:border-box}
+  body{margin:0;background:#f8fafc;color:var(--ink);font-family:"Pretendard","Malgun Gothic",-apple-system,"Segoe UI",sans-serif}
+  .canvas{position:relative;width:1180px;height:865px;margin:0 auto;padding:20px}
+  h1{margin:0;font-size:24px;font-weight:850;letter-spacing:0}
+  .sub{margin-top:5px;color:var(--muted);font-size:13px;line-height:1.45}
+  .diagram{position:absolute;left:20px;top:82px;width:1140px;height:760px}
+  svg.wires{position:absolute;left:0;top:0;width:1140px;height:760px;z-index:2;pointer-events:none}
+  .wire{fill:none;stroke:var(--line);stroke-width:1.9;marker-end:url(#arrow);opacity:.72}
+  .wire-b{fill:none;stroke:var(--blue);stroke-width:1.9;marker-end:url(#arrowB);opacity:.86}
+  .label{font-size:10px;font-weight:850;fill:#475569}
+  .box{position:absolute;z-index:3;background:#fff;border:1.6px solid #cbd5e1;border-radius:8px;box-shadow:0 2px 5px rgba(15,23,42,.10);padding:10px 12px}
+  .box h3{margin:0;font-size:13px;line-height:1.25;font-weight:850}
+  .box p{margin:5px 0 0;color:#475569;font-size:10.5px;line-height:1.38}
+  .server{border-color:#2563eb;border-width:2px;background:#eff6ff}
+  .gpu{border-color:#7c3aed;border-width:2px;background:#faf5ff}
+  .tag{display:inline-block;border-radius:5px;padding:2px 6px;font-size:10px;font-weight:850;color:#fff;background:#2563eb;margin-left:6px}
+  .pillrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .pill{border:1px solid #bfdbfe;background:#dbeafe;color:#1d4ed8;border-radius:6px;padding:3px 7px;font-size:10px;font-weight:850;white-space:nowrap}
+  .card{position:absolute;z-index:3;border-radius:10px;background:#fff;border:1.6px solid #e2e8f0;box-shadow:0 2px 5px rgba(15,23,42,.08);padding:12px}
+  .card h3{margin:0 0 8px;font-size:13px;font-weight:850}
+  .card ul{margin:0;padding-left:17px;color:#475569;font-size:10.7px;line-height:1.45}
+  .card li{margin:5px 0}
+  table{width:100%;border-collapse:collapse;font-size:10px;line-height:1.28}
+  th,td{border:1px solid #e2e8f0;padding:5px 7px;text-align:left;vertical-align:top}
+  th{background:#f1f5f9;color:#334155;font-weight:850}
+  .note{position:absolute;left:112px;top:724px;width:916px;border-top:1px solid #e2e8f0;padding-top:10px;color:#475569;font-size:10.7px;line-height:1.4}
+  .note b{color:#0f172a}
+</style>
+</head>
+<body>
+<div class="canvas">
+  <h1>NAVER Cloud 서버 타입 · c4-g3 / T4 GPU Server</h1>
+  <div class="sub">NAVER 구조도에서 c4-g3는 API/Worker용 4vCPU/8GB급 노드 후보, T4 GPU Server는 자체호스팅 LLM용 T4 16GB GPU 후보로 사용합니다.</div>
+
+  <div class="diagram">
+    <svg class="wires" viewBox="0 0 1140 760">
+      <defs>
+        <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#475569"></path></marker>
+        <marker id="arrowB" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#2563eb"></path></marker>
+      </defs>
+      <path class="wire" d="M210,134 L354,134"></path>
+      <path class="wire" d="M210,260 L354,260"></path>
+      <path class="wire-b" d="M574,134 L724,108"></path>
+      <path class="wire-b" d="M574,260 L724,292"></path>
+      <text class="label" x="238" y="120">Pod 배치</text>
+      <text class="label" x="238" y="246">Pod 배치</text>
+      <text class="label" x="598" y="102">API/Worker 확장</text>
+      <text class="label" x="600" y="284">LLM Replica</text>
+    </svg>
+
+    <div class="box" style="left:48px;top:88px;width:162px;height:92px;border-color:#0891b2;background:#ecfeff">
+      <h3 style="color:#0891b2">NKS Scheduler</h3>
+      <p>Pod 요구 자원을 보고 적절한 Node Pool에 배치합니다.</p>
+    </div>
+
+    <div class="box server" style="left:354px;top:62px;width:220px;height:144px">
+      <h3>CPU Node Pool<span class="tag">c4-g3</span></h3>
+      <p>4vCPU/8GB급 서버 후보<br>API Pod, Worker Pod 실행</p>
+      <div class="pillrow"><span class="pill">HPA</span><span class="pill">KEDA</span><span class="pill">Cluster Autoscaler</span></div>
+    </div>
+
+    <div class="box gpu" style="left:354px;top:228px;width:220px;height:144px">
+      <h3 style="color:#7c3aed">GPU Node Pool<span class="tag" style="background:#7c3aed">T4 GPU</span></h3>
+      <p>T4 16GB GPU 후보<br>Qwen3-8B-AWQ + vLLM Replica</p>
+      <div class="pillrow"><span class="pill" style="border-color:#ddd6fe;background:#f5f3ff;color:#6d28d9">LLM</span><span class="pill" style="border-color:#ddd6fe;background:#f5f3ff;color:#6d28d9">Replica ×2</span></div>
+    </div>
+
+    <div class="box" style="left:724px;top:70px;width:170px;height:86px;border-color:#2563eb">
+      <h3 style="color:#1d4ed8">API / Worker</h3>
+      <p>사용자 요청 처리, OCR·ETL·RAG·Batch 작업 처리</p>
+    </div>
+
+    <div class="box" style="left:724px;top:252px;width:170px;height:86px;border-color:#7c3aed;background:#faf5ff">
+      <h3 style="color:#7c3aed">Private AI</h3>
+      <p>사설망 내부 LLM 엔드포인트. 외부 LLM API 미사용</p>
+    </div>
+
+    <div class="card" style="left:54px;top:420px;width:330px;height:138px">
+      <h3>c4-g3는 어디에 쓰나</h3>
+      <ul>
+        <li>API Node와 Worker Node의 4vCPU/8GB급 기준 후보입니다.</li>
+        <li>사용자 요청은 API Pod가 처리하고, 오래 걸리는 작업은 Worker Pod가 처리합니다.</li>
+        <li>처음부터 큰 서버 1대를 두기보다 여러 Node와 Pod로 수평 확장합니다.</li>
+      </ul>
+    </div>
+
+    <div class="card" style="left:420px;top:420px;width:330px;height:138px">
+      <h3>T4 GPU Server는 어디에 쓰나</h3>
+      <ul>
+        <li>NAVER 기준 자체호스팅 LLM의 T4 GPU 후보입니다.</li>
+        <li>Qwen3-8B-AWQ처럼 양자화한 8B급 모델을 비용 현실적인 선에서 PoC하기 위한 기준선입니다.</li>
+        <li>두 대는 하나의 큰 GPU가 아니라 독립 LLM Replica 2개입니다.</li>
+      </ul>
+    </div>
+
+    <div class="card" style="left:786px;top:420px;width:300px;height:138px">
+      <h3>주의할 점</h3>
+      <ul>
+        <li>서버 타입명은 견적·리전·재고에 따라 최종 확인이 필요합니다.</li>
+        <li>c4-g3와 T4 GPU Server는 역할이 다릅니다. CPU 작업과 LLM GPU 작업을 섞어 보지 않습니다.</li>
+        <li>성능은 PoC에서 p95 latency, Queue 처리시간, tokens/s로 확정합니다.</li>
+      </ul>
+    </div>
+
+    <div class="box" style="left:78px;top:600px;width:990px;height:96px">
+      <h3>구조도에서 읽는 법</h3>
+      <table style="margin-top:8px">
+        <tr><th>표기</th><th>의미</th><th>리움에서의 역할</th></tr>
+        <tr><td><b>c4-g3</b></td><td>4vCPU/8GB급 CPU 서버 후보</td><td>API Node, Worker Node 기본 단위</td></tr>
+        <tr><td><b>T4 GPU Server</b></td><td>T4 16GB GPU 서버 후보</td><td>Qwen3-8B-AWQ + vLLM 자체호스팅 LLM Replica</td></tr>
+        <tr><td><b>Node Pool</b></td><td>같은 성격의 서버 묶음</td><td>API/Worker/GPU 역할을 분리해 확장</td></tr>
+      </table>
+    </div>
+
+    <div class="note">
+      <b>정리:</b> NAVER 구조도에서 c4-g3는 API/Worker를 담는 CPU Node의 기준 후보이고, T4 GPU Server는 자체호스팅 LLM을 담는 T4 GPU 후보입니다.
+      최종 서버 타입과 단가는 공공 리전 견적, 재고, PoC 결과로 확정해야 합니다.
+    </div>
+  </div>
+</div>
+</body>
+</html>

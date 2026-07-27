@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>Worker Node 설명</title>
+<style>
+  :root{
+    --ink:#0f172a; --muted:#64748b; --line:#475569;
+    --blue:#2563eb; --green:#059669; --orange:#ea580c; --purple:#7c3aed; --red:#dc2626;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#f8fafc;color:var(--ink);
+    font-family:"Pretendard","Malgun Gothic",-apple-system,"Segoe UI",sans-serif}
+  .canvas{position:relative;width:1180px;height:865px;margin:0 auto;padding:20px}
+  h1{margin:0;font-size:24px;letter-spacing:0;font-weight:850}
+  .sub{margin-top:5px;color:var(--muted);font-size:13px;line-height:1.45}
+  .diagram{position:absolute;left:20px;top:82px;width:1140px;height:760px}
+  svg.wires{position:absolute;left:0;top:0;width:1140px;height:760px;z-index:2;pointer-events:none}
+  .wire{fill:none;stroke:var(--line);stroke-width:1.9;marker-end:url(#arrow);opacity:.72}
+  .wire-b{fill:none;stroke:var(--blue);stroke-width:1.9;marker-end:url(#arrowB);opacity:.86}
+  .wire-p{fill:none;stroke:var(--purple);stroke-width:2;marker-end:url(#arrowP);opacity:.84}
+  .wire-g{fill:none;stroke:var(--green);stroke-width:1.9;marker-end:url(#arrowG);opacity:.84}
+  .label{font-size:10px;font-weight:850;fill:#475569}
+  .label-b{font-size:10px;font-weight:850;fill:#1d4ed8}
+  .label-p{font-size:10px;font-weight:850;fill:#7c3aed}
+  .label-g{font-size:10px;font-weight:850;fill:#047857}
+  .zone{position:absolute;z-index:1;border-radius:12px;background:#fff}
+  .zt{position:absolute;left:14px;top:9px;font-size:12px;font-weight:850}
+  .box{position:absolute;z-index:3;background:#fff;border:1.6px solid #cbd5e1;border-radius:8px;
+    box-shadow:0 2px 5px rgba(15,23,42,.10);padding:10px 12px}
+  .box h3{margin:0;font-size:13px;line-height:1.25;font-weight:850}
+  .box p{margin:5px 0 0;color:#475569;font-size:10.5px;line-height:1.38}
+  .node{border-color:#2563eb;border-width:2px;background:#f5f9ff}
+  .node h3{color:#1d4ed8;font-size:13px}
+  .pod{border:1.4px solid #bfdbfe;background:#fff;border-radius:7px;margin-top:7px;padding:6px 7px;
+    font-size:10.2px;font-weight:850;color:#1e3a8a;line-height:1.25}
+  .pod small{display:block;color:#475569;font-weight:700;margin-top:2px}
+  .pillrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .pill{border:1px solid #ddd6fe;background:#f5f3ff;color:#6d28d9;border-radius:6px;padding:3px 7px;
+    font-size:10px;font-weight:850;white-space:nowrap}
+  .card{position:absolute;z-index:3;border-radius:10px;background:#fff;border:1.6px solid #e2e8f0;
+    box-shadow:0 2px 5px rgba(15,23,42,.08);padding:12px}
+  .card h3{margin:0 0 8px;font-size:13px;font-weight:850;color:#0f172a}
+  .card ul{margin:0;padding-left:17px;color:#475569;font-size:10.7px;line-height:1.43}
+  .card li{margin:5px 0}
+  table{width:100%;border-collapse:collapse;font-size:10px;line-height:1.28}
+  th,td{border:1px solid #e2e8f0;padding:5px 7px;text-align:left;vertical-align:top}
+  th{background:#f1f5f9;color:#334155;font-weight:850}
+  td strong{color:#0f172a}
+</style>
+</head>
+<body>
+<div class="canvas">
+  <h1>Worker Node · 비동기 작업 실행 풀</h1>
+  <div class="sub">Worker Node는 사용자의 HTTP 요청을 직접 받는 서버가 아니라, 큐에 쌓인 OCR·ETL·RAG·Batch 작업을 Pod로 실행하는 NKS의 작업 전용 노드 풀입니다.</div>
+
+  <div class="diagram">
+    <svg class="wires" viewBox="0 0 1140 760">
+      <defs>
+        <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#475569"></path></marker>
+        <marker id="arrowB" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#2563eb"></path></marker>
+        <marker id="arrowP" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#7c3aed"></path></marker>
+        <marker id="arrowG" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#059669"></path></marker>
+      </defs>
+
+      <!-- Job flow -->
+      <path class="wire" d="M172,98 L240,98"></path>
+      <path class="wire" d="M364,98 L424,98"></path>
+      <path class="wire-p" d="M552,98 L612,98"></path>
+      <path class="wire-p" d="M690,98 L758,98"></path>
+      <path class="wire-b" d="M552,124 L758,166"></path>
+      <text class="label" x="183" y="86">파일/작업 생성</text>
+      <text class="label" x="372" y="86">작업 메시지</text>
+      <text class="label-p" x="566" y="86">큐 감시</text>
+      <text class="label-p" x="704" y="86">Pod 증감</text>
+      <text class="label-b" x="606" y="148">Worker Pod가 메시지 소비</text>
+
+      <!-- Outputs -->
+      <path class="wire-g" d="M912,320 L912,342 L248,342 L248,360"></path>
+      <path class="wire-g" d="M942,320 L942,342 L548,342 L548,360"></path>
+      <path class="wire-g" d="M972,320 L972,342 L850,342 L850,360"></path>
+      <text class="label-g" x="620" y="331">처리 결과 저장·조회·LLM 근거 생성</text>
+    </svg>
+
+    <div class="box" style="left:36px;top:54px;width:136px;height:88px;border-color:#2563eb;background:#eff6ff">
+      <h3 style="color:#1d4ed8">API / Scheduler</h3>
+      <p>사용자 요청은 작업 ID를 만들고, 무거운 처리는 큐로 넘깁니다.</p>
+    </div>
+
+    <div class="box" style="left:240px;top:54px;width:124px;height:88px;border-color:#7c3aed;background:#faf5ff">
+      <h3 style="color:#7c3aed">Object Storage</h3>
+      <p>시험성적서, 성분표, 원본 문서, 처리 결과 파일</p>
+    </div>
+
+    <div class="box" style="left:424px;top:46px;width:128px;height:104px;border-color:#9333ea;background:#faf5ff">
+      <h3 style="color:#7c3aed">RabbitMQ</h3>
+      <p>job queue<br>retry · ack · DLQ</p>
+      <div class="pillrow"><span class="pill">SG-MQ</span></div>
+    </div>
+
+    <div class="box" style="left:612px;top:56px;width:78px;height:84px;border-color:#7c3aed;background:#f5f3ff;text-align:center">
+      <h3 style="color:#7c3aed">KEDA</h3>
+      <p>큐 길이<br>대기시간</p>
+    </div>
+
+    <div class="zone" style="left:758px;top:22px;width:346px;height:298px;border:2px solid #2563eb;background:#eff6ff">
+      <div class="zt" style="color:#1d4ed8">Worker Node Pool · Production</div>
+    </div>
+
+    <div class="box node" style="left:778px;top:62px;width:144px;height:156px">
+      <h3>Worker Node AZ-A</h3>
+      <p>4vCPU/8GB급 Node<br>상시 1대</p>
+      <div class="pod">OCR Worker<small>PaddleOCR CPU</small></div>
+      <div class="pod">ETL Worker<small>수집·정제·Batch</small></div>
+    </div>
+
+    <div class="box node" style="left:942px;top:62px;width:144px;height:156px">
+      <h3>Worker Node AZ-B</h3>
+      <p>4vCPU/8GB급 Node<br>상시 1대</p>
+      <div class="pod">RAG Ingestion<small>정책 문서 적재</small></div>
+      <div class="pod">Report Worker<small>집계·리포트</small></div>
+    </div>
+
+    <div class="box" style="left:792px;top:236px;width:280px;height:54px;border-style:dashed;border-color:#94a3b8;background:#fff">
+      <h3 style="font-size:12px;color:#334155">Scale-out 후보 Node 3~6</h3>
+      <p>Pod가 기존 2대에 더 이상 스케줄되지 않을 때 Cluster Autoscaler로 증설</p>
+    </div>
+
+    <div class="box" style="left:162px;top:360px;width:172px;height:82px;border-color:#ea580c;background:#fff7ed">
+      <h3 style="color:#c2410c">PostgreSQL</h3>
+      <p>처리 상태, 결과 메타데이터, RAG 색인, 집계 결과 저장</p>
+    </div>
+
+    <div class="box" style="left:462px;top:360px;width:172px;height:82px;border-color:#7c3aed;background:#faf5ff">
+      <h3 style="color:#7c3aed">Object Storage</h3>
+      <p>원본 문서와 OCR 결과, 리포트 파일을 사설 경로로 보관</p>
+    </div>
+
+    <div class="box" style="left:764px;top:360px;width:172px;height:82px;border-color:#059669;background:#ecfdf5">
+      <h3 style="color:#047857">Private AI</h3>
+      <p>필요 시 LLM에 근거 생성 요청. LLM GPU와는 역할 분리</p>
+    </div>
+
+    <div class="card" style="left:40px;top:464px;width:334px;height:142px">
+      <h3>Worker Node란</h3>
+      <ul>
+        <li>Kubernetes Pod가 실제로 실행되는 VM입니다.</li>
+        <li>API Node와 달리 외부 요청을 직접 받지 않습니다.</li>
+        <li>큐의 작업을 꺼내 오래 걸리는 계산·문서 처리를 수행합니다.</li>
+        <li>SG-Worker는 인바운드 없이 MQ, DB, AI, Object Storage 쪽으로만 연결합니다.</li>
+      </ul>
+    </div>
+
+    <div class="card" style="left:404px;top:464px;width:334px;height:142px">
+      <h3>리움 Worker 기능</h3>
+      <ul>
+        <li>시험성적서·성분표 OCR: PaddleOCR 자체호스팅 기본</li>
+        <li>공공데이터 수집·정제, ETL, 배치 재처리</li>
+        <li>정책·법령 문서 RAG ingestion, pgvector/DB 적재</li>
+        <li>대시보드·정책 리포트·통계·GIS·매칭 보조 작업</li>
+      </ul>
+    </div>
+
+    <div class="card" style="left:768px;top:464px;width:334px;height:142px">
+      <h3>몇 개를 쓰나</h3>
+      <ul>
+        <li>Production Worker Node Pool: <b>4vCPU/8GB급 ×2</b> 상시</li>
+        <li>AZ-A 1대 + AZ-B 1대로 최소 이중화합니다.</li>
+        <li>Worker Pod는 KEDA로 <b>×N</b> 증감합니다.</li>
+        <li>Node는 작업량 증가 시 <b>2→6대</b> 확장 후보입니다.</li>
+      </ul>
+    </div>
+
+    <div class="box" style="left:54px;top:612px;width:514px;height:132px">
+      <h3>수량 기준 정리</h3>
+      <table style="margin-top:8px">
+        <tr><th>범위</th><th>상시 기준</th><th>확장 기준</th></tr>
+        <tr><td>Production</td><td>Worker Node 2대, Worker Pod ×N</td><td>Queue Depth, Oldest Message Age, 평균 처리시간</td></tr>
+        <tr><td>전체 CPU Node</td><td>Prod API3 + Worker2 + MQ3, Val2, Dev2 = 12대</td><td>상시 비용표는 기준선만 반영</td></tr>
+        <tr><td>GPU</td><td>LLM GPU Replica와 별도</td><td>OCR SLA 부족 시 OCR 전용 GPU 검토</td></tr>
+      </table>
+    </div>
+
+    <div class="box" style="left:598px;top:612px;width:488px;height:132px">
+      <h3>왜 API와 Worker를 나누나</h3>
+      <table style="margin-top:8px">
+        <tr><th>구분</th><th>API Node</th><th>Worker Node</th></tr>
+        <tr><td>목표</td><td>사용자 요청 빠른 응답</td><td>오래 걸리는 작업 완료</td></tr>
+        <tr><td>스케일 기준</td><td>CPU, Memory, p95 latency</td><td>Queue Depth, Oldest Message Age</td></tr>
+        <tr><td>장점</td><td>웹 응답 안정화</td><td>문서 폭주·재처리·배치를 큐로 흡수</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+</body>
+</html>

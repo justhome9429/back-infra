@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>NAVER Object Storage 사설 접근</title>
+<style>
+  :root{--ink:#0f172a;--muted:#64748b;--line:#475569;--blue:#2563eb;--green:#059669;--purple:#7c3aed;--red:#dc2626}
+  *{box-sizing:border-box}
+  body{margin:0;background:#f8fafc;color:var(--ink);font-family:"Pretendard","Malgun Gothic",-apple-system,"Segoe UI",sans-serif}
+  .canvas{position:relative;width:1180px;height:865px;margin:0 auto;padding:20px}
+  h1{margin:0;font-size:24px;font-weight:850;letter-spacing:0}
+  .sub{margin-top:5px;color:var(--muted);font-size:13px;line-height:1.45}
+  .diagram{position:absolute;left:20px;top:82px;width:1140px;height:760px}
+  svg.wires{position:absolute;left:0;top:0;width:1140px;height:760px;z-index:2;pointer-events:none}
+  .wire{fill:none;stroke:var(--line);stroke-width:1.9;marker-end:url(#arrow);opacity:.72}
+  .wire-p{fill:none;stroke:var(--purple);stroke-width:2;marker-end:url(#arrowP);opacity:.86}
+  .wire-r{fill:none;stroke:var(--red);stroke-width:1.8;stroke-dasharray:6 4;opacity:.82}
+  .label{font-size:10px;font-weight:850;fill:#475569}
+  .label-p{font-size:10px;font-weight:850;fill:#7c3aed}
+  .label-r{font-size:10px;font-weight:850;fill:#dc2626}
+  .box{position:absolute;z-index:3;background:#fff;border:1.6px solid #cbd5e1;border-radius:8px;box-shadow:0 2px 5px rgba(15,23,42,.10);padding:10px 12px}
+  .box h3{margin:0;font-size:13px;line-height:1.25;font-weight:850}
+  .box p{margin:5px 0 0;color:#475569;font-size:10.5px;line-height:1.38}
+  .zone{position:absolute;z-index:1;border-radius:12px;background:#fff}
+  .zt{position:absolute;left:14px;top:9px;font-size:12px;font-weight:850}
+  .card{position:absolute;z-index:3;border-radius:10px;background:#fff;border:1.6px solid #e2e8f0;box-shadow:0 2px 5px rgba(15,23,42,.08);padding:12px}
+  .card h3{margin:0 0 8px;font-size:13px;font-weight:850}
+  .card ul{margin:0;padding-left:17px;color:#475569;font-size:10.7px;line-height:1.45}
+  .card li{margin:5px 0}
+  table{width:100%;border-collapse:collapse;font-size:10px;line-height:1.28}
+  th,td{border:1px solid #e2e8f0;padding:5px 7px;text-align:left;vertical-align:top}
+  th{background:#f1f5f9;color:#334155;font-weight:850}
+  .note{position:absolute;left:102px;top:720px;width:940px;border-top:1px solid #e2e8f0;padding-top:10px;color:#475569;font-size:10.7px;line-height:1.4}
+  .note b{color:#0f172a}
+</style>
+</head>
+<body>
+<div class="canvas">
+  <h1>NAVER Object Storage · Private Endpoint 사설 접근</h1>
+  <div class="sub">NAVER VPC 환경에서는 Object Storage 접근에 private endpoint 주소를 사용해, 문서 원본과 OCR 결과가 인터넷/NAT 경로로 우회하지 않게 설명할 수 있습니다.</div>
+
+  <div class="diagram">
+    <svg class="wires" viewBox="0 0 1140 760">
+      <defs>
+        <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#475569"></path></marker>
+        <marker id="arrowP" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#7c3aed"></path></marker>
+      </defs>
+      <path class="wire-p" d="M280,158 L430,158"></path>
+      <path class="wire-p" d="M610,158 L782,158"></path>
+      <text class="label-p" x="304" y="145">S3 API 호출</text>
+      <text class="label-p" x="628" y="145">private endpoint</text>
+      <path class="wire-r" d="M276,438 L494,438 L494,262"></path>
+      <text class="label-r" x="300" y="426">문서 원본 경로는 인터넷/NAT 우회를 기본으로 보지 않음</text>
+    </svg>
+
+    <div class="zone" style="left:44px;top:62px;width:320px;height:190px;border:2px solid #2563eb;background:#eff6ff">
+      <div class="zt" style="color:#1d4ed8">Private Subnet · NKS</div>
+    </div>
+    <div class="box" style="left:86px;top:116px;width:194px;height:90px;border-color:#2563eb;background:#fff">
+      <h3>API / Worker Pod</h3>
+      <p>업로드 원본, OCR 결과, 리포트 파일을 Object Storage API로 저장·조회합니다.</p>
+    </div>
+
+    <div class="box" style="left:430px;top:96px;width:180px;height:124px;border-color:#7c3aed;border-width:2px;background:#faf5ff">
+      <h3 style="color:#7c3aed">Private Endpoint</h3>
+      <p>VPC 내부에서 사용하는 Object Storage 접근 주소</p>
+      <p style="font-weight:850;color:#6d28d9">kr.object.private.ncloudstorage.com</p>
+    </div>
+
+    <div class="box" style="left:782px;top:106px;width:206px;height:104px;border-color:#059669;background:#ecfdf5">
+      <h3 style="color:#047857">Object Storage</h3>
+      <p>문서 원본, OCR 결과, WORM/로그 아카이브, 리포트 파일 보관</p>
+    </div>
+
+    <div class="box" style="left:392px;top:336px;width:204px;height:82px;border-color:#dc2626;background:#fff5f5">
+      <h3 style="color:#dc2626">NAT/인터넷 경로 아님</h3>
+      <p>일반 외부 API 호출과 문서 저장소 접근 경로를 분리해 설명합니다.</p>
+    </div>
+
+    <div class="card" style="left:60px;top:486px;width:330px;height:140px">
+      <h3>왜 필요한가</h3>
+      <ul>
+        <li>시험성적서와 성분표는 영업비밀 가능성이 있어 경로 설명이 중요합니다.</li>
+        <li>Private Subnet의 Pod가 Object Storage에 접근할 때 인터넷 우회로 보이지 않습니다.</li>
+        <li>보안성 검토에서 “문서가 어디로 이동하는가”를 설명하기 쉽습니다.</li>
+      </ul>
+    </div>
+
+    <div class="card" style="left:424px;top:486px;width:330px;height:140px">
+      <h3>NHN과 표현 차이</h3>
+      <ul>
+        <li>NHN 구조도는 Service Gateway라는 박스로 사설 경로를 표현했습니다.</li>
+        <li>NAVER 구조도는 Object Storage private endpoint 주소를 사용하는 방식으로 표현합니다.</li>
+        <li>둘 다 목적은 Private Subnet에서 Object Storage로 사설 접근을 설명하는 것입니다.</li>
+      </ul>
+    </div>
+
+    <div class="card" style="left:788px;top:486px;width:300px;height:140px">
+      <h3>주의할 점</h3>
+      <ul>
+        <li>사용자 브라우저가 private endpoint에 직접 붙는 구조가 아닙니다.</li>
+        <li>API/Worker Pod가 인증된 권한으로 Object Storage API를 호출합니다.</li>
+        <li>버킷 정책, 접근키, 로그 보존은 별도로 운영 통제해야 합니다.</li>
+      </ul>
+    </div>
+
+    <div class="box" style="left:120px;top:648px;width:900px;height:58px">
+      <h3>구조도에서 읽는 법</h3>
+      <table style="margin-top:8px">
+        <tr><th>표기</th><th>의미</th><th>리움에서의 역할</th></tr>
+        <tr><td>Object Storage Private Endpoint</td><td>VPC 내부 Object Storage 접근 경로</td><td>문서·OCR·리포트 저장소 사설 접근</td></tr>
+      </table>
+    </div>
+
+    <div class="note">
+      <b>정리:</b> NAVER 구조도에서 Object Storage Private Endpoint는 저장소 자체가 App Tier 안에 있다는 뜻이 아니라,
+      Private Subnet의 Pod가 Object Storage API로 갈 때 사용하는 내부 접근 경로를 뜻합니다.
+    </div>
+  </div>
+</div>
+</body>
+</html>

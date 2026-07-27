@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>NHN Cloud 인스턴스 타입 이해</title>
+<style>
+  :root{
+    --ink:#0f172a; --muted:#64748b; --line:#475569;
+    --blue:#2563eb; --green:#059669; --orange:#ea580c; --purple:#7c3aed; --red:#dc2626;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#f8fafc;color:var(--ink);
+    font-family:"Pretendard","Malgun Gothic",-apple-system,"Segoe UI",sans-serif}
+  .canvas{position:relative;width:1180px;height:820px;margin:0 auto;padding:20px}
+  h1{margin:0;font-size:24px;letter-spacing:0;font-weight:850}
+  .sub{margin-top:5px;color:var(--muted);font-size:13px;line-height:1.45}
+  .diagram{position:absolute;left:20px;top:82px;width:1140px;height:718px}
+  svg.wires{position:absolute;left:0;top:0;width:1140px;height:718px;z-index:2;pointer-events:none}
+  .wire{fill:none;stroke:var(--line);stroke-width:1.8;marker-end:url(#arrow);opacity:.68}
+  .wire-b{fill:none;stroke:var(--blue);stroke-width:2;marker-end:url(#arrowB);opacity:.82}
+  .label{font-size:10px;font-weight:850;fill:#475569}
+  .zone{position:absolute;z-index:1;border-radius:12px;background:#fff}
+  .zt{position:absolute;left:14px;top:9px;font-size:12px;font-weight:850}
+  .box{position:absolute;z-index:3;background:#fff;border:1.6px solid #cbd5e1;border-radius:8px;
+    box-shadow:0 2px 5px rgba(15,23,42,.10);padding:10px 12px}
+  .box h3{margin:0;font-size:13px;line-height:1.25;font-weight:850}
+  .box p{margin:5px 0 0;color:#475569;font-size:10.5px;line-height:1.38}
+  .hero{border-color:#2563eb;border-width:2px;background:#f5f9ff;text-align:center}
+  .hero h3{font-size:18px;color:#1d4ed8}
+  .chips{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:9px}
+  .chip{border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;border-radius:6px;padding:4px 8px;
+    font-size:10.5px;font-weight:850;white-space:nowrap}
+  table{width:100%;border-collapse:collapse;font-size:10.3px;line-height:1.32}
+  th,td{border:1px solid #e2e8f0;padding:6px 7px;text-align:left;vertical-align:top}
+  th{background:#f1f5f9;color:#334155;font-weight:850}
+  td strong{color:#0f172a}
+  .m2{color:#1d4ed8;font-weight:850}
+  .c2{color:#c2410c;font-weight:850}
+  .r2{color:#047857;font-weight:850}
+  .x1{color:#7c3aed;font-weight:850}
+  .note{position:absolute;left:205px;top:660px;width:760px;z-index:3;border-top:1px solid #e2e8f0;
+    padding-top:11px;color:#475569;font-size:11px;line-height:1.48}
+  .note b{color:#0f172a}
+  .small{font-size:9.8px;color:#64748b;line-height:1.35}
+</style>
+</head>
+<body>
+<div class="canvas">
+  <h1>m2.c4m8와 NHN Cloud 인스턴스 타입</h1>
+  <div class="sub">인스턴스 타입은 가상 서버의 vCPU, 메모리 조합입니다. 리움 구조도에서 쓰인 m2.c4m8은 Standard 계열의 4 vCPU / 8GB 서버 타입입니다.</div>
+
+  <div class="diagram">
+    <svg class="wires" viewBox="0 0 1140 718">
+      <defs>
+        <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#475569"></path></marker>
+        <marker id="arrowB" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#2563eb"></path></marker>
+      </defs>
+      <path class="wire-b" d="M420,104 L258,214"></path>
+      <path class="wire-b" d="M560,128 L560,214"></path>
+      <path class="wire-b" d="M700,104 L858,214"></path>
+      <text class="label" x="286" y="176">m2 = Standard 계열</text>
+      <text class="label" x="574" y="178">c4 = 4 vCPU</text>
+      <text class="label" x="742" y="176">m8 = 8GB Memory</text>
+    </svg>
+
+    <div class="box hero" style="left:430px;top:42px;width:280px;height:120px">
+      <h3>m2.c4m8</h3>
+      <p>Standard 계열 · 4 vCPU · 8GB Memory<br>리움 API/Worker Node 기본 단위</p>
+      <div class="chips">
+        <span class="chip">중간급 CPU 노드</span>
+        <span class="chip">vCPU:RAM = 1:2</span>
+        <span class="chip">공공 기준 196원/h</span>
+      </div>
+    </div>
+
+    <div class="box" style="left:40px;top:214px;width:240px;height:116px;border-color:#2563eb;background:#eff6ff">
+      <h3 style="color:#1d4ed8">이름 읽는 법</h3>
+      <p><b>m2</b>는 Standard 계열입니다. <b>c4</b>는 vCPU 4개, <b>m8</b>은 메모리 8GB를 뜻합니다.</p>
+      <p class="small">즉 m2.c8m16은 Standard 8 vCPU / 16GB, r2.c4m16은 Memory Optimized 4 vCPU / 16GB입니다.</p>
+    </div>
+
+    <div class="box" style="left:312px;top:214px;width:236px;height:116px;border-color:#059669;background:#ecfdf5">
+      <h3 style="color:#047857">어느 정도 성능인가</h3>
+      <p>단일 서버 기준으로는 작은 장비보다 여유 있고, 대형 DB나 AI 추론용으로는 부족한 중간급입니다.</p>
+      <p class="small">API 서버, 경량 Worker, OCR/ETL Pod를 여러 노드로 분산하기에 적당합니다.</p>
+    </div>
+
+    <div class="box" style="left:580px;top:214px;width:236px;height:116px;border-color:#ea580c;background:#fff7ed">
+      <h3 style="color:#c2410c">리움에서의 의미</h3>
+      <p>m2.c4m8 한 대가 전체 서비스를 혼자 감당하는 구조가 아니라, NKS Worker Node 여러 대가 Pod를 나눠 받습니다.</p>
+      <p class="small">Prod 5대 + Val 2대 기준으로 비용 산정되어 있습니다.</p>
+    </div>
+
+    <div class="box" style="left:848px;top:214px;width:252px;height:116px;border-color:#7c3aed;background:#faf5ff">
+      <h3 style="color:#7c3aed">주의할 점</h3>
+      <p>vCPU/Memory만으로 실제 처리량이 확정되지는 않습니다. Python API, OCR, DB 대기, 외부 API 지연에 따라 달라집니다.</p>
+      <p class="small">최종 검증은 p95 latency, CPU, memory, queue depth 부하테스트로 봐야 합니다.</p>
+    </div>
+
+    <div class="box" style="left:40px;top:362px;width:515px;height:268px">
+      <h3>NHN Cloud CPU 인스턴스 계열 비교</h3>
+      <table style="margin-top:9px">
+        <thead>
+          <tr><th>계열</th><th>비율</th><th>대표 타입</th><th>잘 맞는 용도</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="m2">Standard m2</span></td>
+            <td>vCPU:RAM<br>1:2</td>
+            <td>m2.c1m2, m2.c2m4,<br><strong>m2.c4m8</strong>, m2.c8m16, m2.c16m32</td>
+            <td>일반 API, 웹 서버, 경량 Worker, 균형형 업무 서버</td>
+          </tr>
+          <tr>
+            <td><span class="c2">Compute Optimized c2</span></td>
+            <td>1:1</td>
+            <td>c2.c2m2, c2.c4m4,<br>c2.c8m8, c2.c16m16</td>
+            <td>CPU 연산 비중이 큰 배치, 변환, 계산 작업</td>
+          </tr>
+          <tr>
+            <td><span class="r2">Memory Optimized r2</span></td>
+            <td>1:4 중심</td>
+            <td>r2.c2m8, r2.c4m16,<br>r2.c4m32, r2.c8m32, r2.c8m64</td>
+            <td>DB, Cache, 검색 인덱스, 메모리 사용량 큰 서비스</td>
+          </tr>
+          <tr>
+            <td><span class="x1">Performance Optimized x1</span></td>
+            <td>1:4 / 1:8</td>
+            <td>x1.c16m64, x1.c16m128,<br>x1.c32m128, x1.c32m256, x1.c64m256</td>
+            <td>64GB 이상 고메모리, 대형 분석, 고성능 업무</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="box" style="left:585px;top:362px;width:515px;height:268px">
+      <h3>대표 사양 표</h3>
+      <table style="margin-top:9px">
+        <thead>
+          <tr><th>타입</th><th>vCPU</th><th>Memory</th><th>상대 크기</th><th>리움 관점</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>m2.c2m4</td><td>2</td><td>4GB</td><td>소형</td><td>Dev, 작은 보조 서버</td></tr>
+          <tr><td><strong>m2.c4m8</strong></td><td><strong>4</strong></td><td><strong>8GB</strong></td><td><strong>중형</strong></td><td><strong>Prod API/Worker Node 기본 단위</strong></td></tr>
+          <tr><td>m2.c8m16</td><td>8</td><td>16GB</td><td>중대형</td><td>Pod 밀도 증가, Worker 여유 확대</td></tr>
+          <tr><td>c2.c8m8</td><td>8</td><td>8GB</td><td>CPU형</td><td>CPU 위주 배치에 유리, 메모리 여유는 작음</td></tr>
+          <tr><td>r2.c4m16</td><td>4</td><td>16GB</td><td>메모리형</td><td>DB Proxy, Cache, 메모리 민감 서비스</td></tr>
+          <tr><td>x1.c16m64</td><td>16</td><td>64GB</td><td>고성능</td><td>일반 API Node로는 과하고 대형 메모리 업무용</td></tr>
+        </tbody>
+      </table>
+      <p class="small" style="margin-top:8px">가격은 리전/공공·일반 상품/서비스 조합에 따라 달라질 수 있습니다. 이 화면은 인프라 구조 이해를 위한 사양 중심 표입니다.</p>
+    </div>
+
+    <div class="note">
+      <b>정리:</b> m2.c4m8은 리움에서 “한 대로 모든 처리를 끝내는 서버”가 아니라, NKS가 여러 Worker Node 위에 Pod를 나눠 올릴 때 쓰는 균형형 기본 단위입니다.
+      리움처럼 API, OCR/ETL Worker, RAG 작업이 섞인 업무형 서비스에서는 처음부터 r2/x1 같은 고메모리 장비로 올리기보다 m2.c4m8 여러 대와 HPA/KEDA로 수평 확장하는 쪽이 설명과 운영이 쉽습니다.
+    </div>
+  </div>
+</div>
+</body>
+</html>
